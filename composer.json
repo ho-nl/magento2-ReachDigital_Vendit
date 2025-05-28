@@ -1,0 +1,17 @@
+{
+  "name": "reach-digital/magento2-vendit",
+  "description": "Vendit Magento 2 Connector",
+  "require": {
+    "php": "~8.1",
+    "magento/product-community-edition": "^2.4"
+  },
+  "type": "magento2-module",
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "ReachDigital\\Vendit\\": ""
+    }
+  }
+}
