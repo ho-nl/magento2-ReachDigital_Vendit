@@ -1,0 +1,10 @@
+<?php /** @var $block \ReachDigital\Vendit\Block\Adminhtml\System\Config\ExportInfo */ ?>
+<?php
+$fileUrl = $block->getUrl('vendit/categoryExport/download');
+?>
+<?php if (file_exists($block->getFilePath())): ?>
+    <a href="<?= $fileUrl ?>"><?=__('Download latest export');?></a><br/>
+    <?=__('Created at %1', $block->getCreationDate());?>
+<?php else: ?>
+    <p><em><?=__('No export file found.');?></em></p>
+<?php endif; ?>

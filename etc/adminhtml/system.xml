@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright © Reach Digital (https://www.reachdigital.io/)
+  ~ See LICENSE.txt for license details.
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="vendit" translate="label" sortOrder="210">
+            <label>Vendit</label>
+        </tab>
+        <section id="vendit_export" translate="label" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+            <label>Export</label>
+            <tab>vendit</tab>
+            <resource>ReachDigital_Vendit::config</resource>
+            <group id="export_settings" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Export Settings</label>
+                <field id="manual_export" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Manual Export</label>
+                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\ExportButton</frontend_model>
+                </field>
+                <field id="last_export" translate="label" type="label" sortOrder="20" showInDefault="1">
+                    <label>Last Export</label>
+                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\ExportInfo</frontend_model>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>
