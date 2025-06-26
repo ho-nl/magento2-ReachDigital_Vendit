@@ -18,6 +18,7 @@ class ExportCategoriesXml
 {
     const ROOT_CATEGORY_ID = 2;
 
+    // @todo introduce vendit dir?
     const DIRECTORY = 'export';
     const FILENAME = 'categories.xml';
 
@@ -30,7 +31,7 @@ class ExportCategoriesXml
     ) {
     }
 
-    public function export(): void
+    public function execute(): void
     {
         $doc = new \DOMDocument('1.0', 'utf-16');
         $doc->formatOutput = true;
@@ -64,7 +65,7 @@ class ExportCategoriesXml
         $groupNode = $doc->createElement('Group');
         $parentNode->appendChild($groupNode);
 
-        $guid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(md5($category->getId()), 4));
+        $guid = $this->getGuid((string) $category->getId());
 
         $elements = [
             'GroupGuid' => $guid,
@@ -112,5 +113,10 @@ class ExportCategoriesXml
         }
 
         return $directory . DIRECTORY_SEPARATOR . self::FILENAME;
+    }
+
+    public function getGuid(string $categoryId): string
+    {
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(md5($categoryId), 4));
     }
 }

@@ -33,7 +33,7 @@ class ExportCategories extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
-            $this->exporter->export();
+            $this->exporter->execute();
             $output->writeln('<info>Categories successfully exported to ' . $this->exporter->getFilePath() . '</info>');
 
             return Cli::RETURN_SUCCESS;
