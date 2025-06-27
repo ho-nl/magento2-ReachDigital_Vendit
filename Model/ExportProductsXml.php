@@ -1,10 +1,16 @@
 <?php
+/**
+ * Copyright © Reach Digital (https://www.reachdigital.io/)
+ * See LICENSE.txt for license details.
+ */
+
+declare(strict_types=1);
+
 namespace ReachDigital\Vendit\Model;
 
 use DOMDocument;
 use DOMElement;
 use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
-use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\CategoryRepository;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
@@ -12,7 +18,6 @@ use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
-use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as ConfigurableType;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
@@ -21,25 +26,16 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
 
 class ExportProductsXml
 {
+    const FILENAME = 'products.xml';
+
     // @todo configurable? from default country/tax rule?
     const TAX_PERCENTAGE = 21;
 
     const NODE_TYPE_STRING = 'string';
     const NODE_TYPE_NUMBER = 'number';
 
-    // @todo
-    private $productRepo;
-    private CollectionFactory $productCollectionFactory;
-    private $configurableType;
-
-    // @todo introduce vendit dir?
-    const DIRECTORY = 'export';
-    const FILENAME = 'products.xml';
-
     public function __construct(
-        ProductRepositoryInterface $productRepo,
-        CollectionFactory $productCollectionFactory,
-        ConfigurableType $configurableType,
+        public CollectionFactory $productCollectionFactory,
         public CategoryRepository $categoryRepo,
         public File $file,
         public DateTime $dateTime,
@@ -48,11 +44,9 @@ class ExportProductsXml
         public ExportCategoriesXml $exportCategoriesXml,
         public ProductAttributeRepositoryInterface $productAttributeRepository,
         public SearchCriteriaBuilder $searchCriteriaBuilder,
-        public StockRegistryInterface $stockRegistry
+        public StockRegistryInterface $stockRegistry,
+        public Config $venditConfig
     ) {
-        $this->productRepo = $productRepo;
-        $this->productCollectionFactory = $productCollectionFactory;
-        $this->configurableType = $configurableType;
     }
 
     public function execute(bool $debug = false): bool|int
@@ -253,7 +247,7 @@ class ExportProductsXml
                         foreach ($mediaGallery as $image) {
                             $imageNode = $doc->createElement('Image', basename($image->getFile()));
                             $imageOrderAttr = $doc->createAttribute('ImageOrder');
-                            $imageOrderAttr->value = $imageOrder;
+                            $imageOrderAttr->value = (string) $imageOrder;
                             $imageNode->appendChild($imageOrderAttr);
                             $imagesNode->appendChild($imageNode);
                             $imageOrder++;
@@ -294,7 +288,7 @@ class ExportProductsXml
                     $spec->appendChild($doc->createElement('Name', htmlspecialchars($attribute->getAttributeCode())));
                     $spec->appendChild($doc->createElement('Value', htmlspecialchars($attribute->getValue())));
                     $spec->appendChild($doc->createElement('Important', 'False'));
-                    $spec->appendChild($doc->createElement('ItemOrder', $i));
+                    $spec->appendChild($doc->createElement('ItemOrder', (string) $i));
 
                     $specsNode->appendChild($spec);
                     $i++;
@@ -319,14 +313,14 @@ class ExportProductsXml
         return $doc->save($this->getFilePath());
     }
 
+    public function getFilename(): string
+    {
+        return self::FILENAME;
+    }
+
     public function getFilePath(): string
     {
-        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . self::DIRECTORY;
-        if (!$this->ioFile->fileExists($directory)) {
-            $this->ioFile->mkdir($directory, 0775);
-        }
-
-        return $directory . DIRECTORY_SEPARATOR . self::FILENAME;
+        return $this->venditConfig->getFilePath($this->getFilename(), Config::DIRECTORY_EXPORT);
     }
 
     public function append(
@@ -345,7 +339,7 @@ class ExportProductsXml
         if ($value instanceof DOMElement) {
             $node->appendChild($value);
         } else {
-            $node->appendChild($doc->createElement($name, $value ?? ''));
+            $node->appendChild($doc->createElement($name, (string) $value ?? ''));
         }
     }
 

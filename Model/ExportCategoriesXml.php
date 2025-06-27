@@ -9,25 +9,18 @@ declare(strict_types=1);
 namespace ReachDigital\Vendit\Model;
 
 use Magento\Catalog\Model\CategoryRepository;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Filesystem\Driver\File;
-use Magento\Framework\Filesystem\Io\File as IoFile;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 
 class ExportCategoriesXml
 {
-    const ROOT_CATEGORY_ID = 2;
-
-    // @todo introduce vendit dir?
-    const DIRECTORY = 'export';
     const FILENAME = 'categories.xml';
+
+    const ROOT_CATEGORY_ID = 2;
 
     public function __construct(
         public CategoryRepository $categoryRepo,
-        public File $file,
         public DateTime $dateTime,
-        public DirectoryList $directoryList,
-        public IoFile $ioFile
+        public Config $venditConfig
     ) {
     }
 
@@ -107,12 +100,7 @@ class ExportCategoriesXml
 
     public function getFilePath(): string
     {
-        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . self::DIRECTORY;
-        if (!$this->ioFile->fileExists($directory)) {
-            $this->ioFile->mkdir($directory, 0775);
-        }
-
-        return $directory . DIRECTORY_SEPARATOR . self::FILENAME;
+        return $this->venditConfig->getFilePath(Config::DIRECTORY_EXPORT, $this->getFilename());
     }
 
     public function getGuid(string $categoryId): string

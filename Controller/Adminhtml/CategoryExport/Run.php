@@ -23,7 +23,7 @@ class Run extends Action
     public function execute(): Redirect
     {
         try {
-            $this->exporter->export();
+            $this->exporter->execute();
 
             $downloadUrl = $this->getUrl('vendit/categoryExport/download');
             $path = $this->exporter->getFilePath();
