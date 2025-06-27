@@ -18,7 +18,7 @@ use ReachDigital\Vendit\Model\ExportCategoriesXml;
 
 class CategoryExportInfo extends Field
 {
-    protected $_template = 'ReachDigital_Vendit::system/config/category_export_info.phtml';
+    protected $_template = 'ReachDigital_Vendit::system/config/export_info.phtml';
 
     public function __construct(
         Context $context,
@@ -46,5 +46,10 @@ class CategoryExportInfo extends Field
         return $this->timezone
             ->date((new \DateTime())->setTimestamp($timestamp))
             ->format(DateTime::DATETIME_PHP_FORMAT);
+    }
+
+    public function getDownloadUrl(): string
+    {
+        return $this->getUrl('vendit/categoryExport/download');
     }
 }

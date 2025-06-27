@@ -15,7 +15,7 @@ use Magento\Framework\UrlInterface;
 
 class ProductExportButton extends Field
 {
-    protected $_template = 'ReachDigital_Vendit::system/config/product_export_button.phtml';
+    protected $_template = 'ReachDigital_Vendit::system/config/export_button.phtml';
 
     public function __construct(Context $context, public UrlInterface $urlBuilder, array $data = [])
     {

@@ -7,16 +7,10 @@
     <type name="Magento\Framework\View\Element\Message\MessageConfigurationsPool">
         <arguments>
             <argument name="configurationsMap" xsi:type="array">
-                <item name="downloadCategoryXmlExportSuccess" xsi:type="array">
+                <item name="downloadXmlExportSuccess" xsi:type="array">
                     <item name="renderer" xsi:type="const">\Magento\Framework\View\Element\Message\Renderer\BlockRenderer::CODE</item>
                     <item name="data" xsi:type="array">
-                        <item name="template" xsi:type="string">ReachDigital_Vendit::messages/downloadCategoryXmlExportSuccess.phtml</item>
-                    </item>
-                </item>
-                <item name="downloadProductXmlExportSuccess" xsi:type="array">
-                    <item name="renderer" xsi:type="const">\Magento\Framework\View\Element\Message\Renderer\BlockRenderer::CODE</item>
-                    <item name="data" xsi:type="array">
-                        <item name="template" xsi:type="string">ReachDigital_Vendit::messages/downloadProductXmlExportSuccess.phtml</item>
+                        <item name="template" xsi:type="string">ReachDigital_Vendit::messages/downloadXmlExportSuccess.phtml</item>
                     </item>
                 </item>
             </argument>

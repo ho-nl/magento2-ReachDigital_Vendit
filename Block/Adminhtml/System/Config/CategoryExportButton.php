@@ -15,7 +15,7 @@ use Magento\Framework\UrlInterface;
 
 class CategoryExportButton extends Field
 {
-    protected $_template = 'ReachDigital_Vendit::system/config/category_export_button.phtml';
+    protected $_template = 'ReachDigital_Vendit::system/config/export_button.phtml';
 
     public function __construct(Context $context, public UrlInterface $urlBuilder, array $data = [])
     {

@@ -28,7 +28,8 @@ class Run extends Action
             $downloadUrl = $this->getUrl('vendit/productExport/download');
             $path = $this->exporter->getFilePath();
 
-            $this->messageManager->addComplexSuccessMessage('downloadProductXmlExportSuccess', [
+            $this->messageManager->addComplexSuccessMessage('downloadXmlExportSuccess', [
+                'type' => 'Product XML',
                 'url' => $downloadUrl,
                 'path' => $path,
             ]);

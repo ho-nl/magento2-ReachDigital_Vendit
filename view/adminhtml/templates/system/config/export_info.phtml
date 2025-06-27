@@ -1,6 +1,5 @@
-<?php /** @var $block \ReachDigital\Vendit\Block\Adminhtml\System\Config\CategoryExportInfo */ ?>
 <?php
-$fileUrl = $block->getUrl('vendit/categoryExport/download');
+$fileUrl = $block->getDownloadUrl();
 ?>
 <?php if (file_exists($block->getFilePath())): ?>
     <a href="<?= $fileUrl ?>"><?=__('Download latest export');?></a><br/>
