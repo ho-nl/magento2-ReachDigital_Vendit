@@ -16,9 +16,9 @@ use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
 use ReachDigital\Vendit\Model\ExportCategoriesXml;
 
-class ExportInfo extends Field
+class CategoryExportInfo extends Field
 {
-    protected $_template = 'ReachDigital_Vendit::system/config/export_info.phtml';
+    protected $_template = 'ReachDigital_Vendit::system/config/category_export_info.phtml';
 
     public function __construct(
         Context $context,

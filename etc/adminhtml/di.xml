@@ -13,6 +13,12 @@
                         <item name="template" xsi:type="string">ReachDigital_Vendit::messages/downloadCategoryXmlExportSuccess.phtml</item>
                     </item>
                 </item>
+                <item name="downloadProductXmlExportSuccess" xsi:type="array">
+                    <item name="renderer" xsi:type="const">\Magento\Framework\View\Element\Message\Renderer\BlockRenderer::CODE</item>
+                    <item name="data" xsi:type="array">
+                        <item name="template" xsi:type="string">ReachDigital_Vendit::messages/downloadProductXmlExportSuccess.phtml</item>
+                    </item>
+                </item>
             </argument>
         </arguments>
     </type>

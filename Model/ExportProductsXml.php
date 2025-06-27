@@ -320,7 +320,7 @@ class ExportProductsXml
 
     public function getFilePath(): string
     {
-        return $this->venditConfig->getFilePath($this->getFilename(), Config::DIRECTORY_EXPORT);
+        return $this->venditConfig->getFilePath($this->getFilename());
     }
 
     public function append(

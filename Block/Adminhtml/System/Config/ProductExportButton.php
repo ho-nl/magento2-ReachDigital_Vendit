@@ -13,9 +13,9 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Backend\Block\Template\Context;
 use Magento\Framework\UrlInterface;
 
-class ExportButton extends Field
+class ProductExportButton extends Field
 {
-    protected $_template = 'ReachDigital_Vendit::system/config/export_button.phtml';
+    protected $_template = 'ReachDigital_Vendit::system/config/product_export_button.phtml';
 
     public function __construct(Context $context, public UrlInterface $urlBuilder, array $data = [])
     {
@@ -29,6 +29,6 @@ class ExportButton extends Field
 
     public function getExportUrl(): string
     {
-        return $this->urlBuilder->getUrl('vendit/categoryExport/run');
+        return $this->urlBuilder->getUrl('vendit/productExport/run');
     }
 }
