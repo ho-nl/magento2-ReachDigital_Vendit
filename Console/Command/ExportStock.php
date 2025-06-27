@@ -9,30 +9,32 @@ declare(strict_types=1);
 namespace ReachDigital\Vendit\Console\Command;
 
 use Magento\Framework\Console\Cli;
-use ReachDigital\Vendit\Model\ExportProductsXml;
+use ReachDigital\Vendit\Model\ExportStockXml;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ExportProducts extends Command
+class ExportStock extends Command
 {
-    public function __construct(public ExportProductsXml $exporter)
+    public function __construct(public ExportStockXml $exporter)
     {
         parent::__construct();
     }
 
     protected function configure(): void
     {
-        $this->setName('vendit:export:products')->setDescription('Export all products to XML');
+        $this->setName('vendit:export:stock')->setDescription('Export all product stock items to XML');
 
         parent::configure();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         try {
             $this->exporter->execute();
-            $output->writeln('<info>Products successfully exported to ' . $this->exporter->getFilePath() . '</info>');
+            $output->writeln(
+                '<info>Stock items successfully exported to ' . $this->exporter->getFilePath() . '</info>'
+            );
 
             return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {

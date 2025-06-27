@@ -228,7 +228,7 @@ class ExportProductsXml
                         $doc,
                         $node,
                         'AvailabilityStatus',
-                        $stockItem->getIsInStock() ? 'Leverbaar' : 'Uit assortiment'
+                        $stockItem->getIsInStock() ? 'Leverbaar' : 'Niet leverbaar'
                     );
 
                     $barcodes = $doc->createElement('Barcodes');
@@ -297,11 +297,11 @@ class ExportProductsXml
 
                 $productNode->appendChild($doc->createElement('LastModified', $product->getUpdatedAt()));
                 $productsNode->appendChild($productNode);
+                $p++;
             }
 
             $collection->clear(); // Clear memory
             $page++;
-            $p++;
         } while ($page <= $collection->getLastPageNumber());
 
         if ($debug) {

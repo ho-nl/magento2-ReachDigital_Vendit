@@ -9,6 +9,7 @@
             <argument name="commands" xsi:type="array">
                 <item name="category_export" xsi:type="object">ReachDigital\Vendit\Console\Command\ExportCategories</item>
                 <item name="product_export" xsi:type="object">ReachDigital\Vendit\Console\Command\ExportProducts</item>
+                <item name="stock_export" xsi:type="object">ReachDigital\Vendit\Console\Command\ExportStock</item>
             </argument>
         </arguments>
     </type>
