@@ -3,7 +3,7 @@ declare(strict_types=1);
 /** @var \Magento\Framework\View\Element\Template $block */
 ?>
 <?= $block->escapeHtml(__(
-    '%1 exported to <a href="%1">%2</a>',
+    '%1 exported to <a href="%2">%3</a>',
     $block->getData('type'),
     $block->getData('url'),
     $block->getData('path'),

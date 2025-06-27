@@ -30,6 +30,14 @@
                     <label>Last Product Export</label>
                     <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\ProductExportInfo</frontend_model>
                 </field>
+                <field id="manual_stock_export" translate="label" type="button" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Manual Stock Export</label>
+                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\StockExportButton</frontend_model>
+                </field>
+                <field id="last_stock_export" translate="label" type="label" sortOrder="60" showInDefault="1">
+                    <label>Last Stock Export</label>
+                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\StockExportInfo</frontend_model>
+                </field>
             </group>
         </section>
     </system>
