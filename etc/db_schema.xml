@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright © Reach Digital (http://www.reachdigital.io/)
+  ~ See LICENSE.txt for license details.
+  -->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="reachdigital_vendit_exported_orders" resource="default" engine="innodb" comment="Vendit Exported Orders">
+        <column xsi:type="varchar" name="order_increment_id" nullable="false" length="50" comment="Increment ID"/>
+        <column name="exported_at" xsi:type="datetime" nullable="false" comment="Exported At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="order_increment_id"/>
+        </constraint>
+        <index referenceId="REACHDIGITAL_VENDIT_EXPORTED_ORDERS_ORDER_INCREMENT_ID" indexType="btree">
+            <column name="order_increment_id"/>
+        </index>
+    </table>
+</schema>
