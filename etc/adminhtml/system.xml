@@ -8,12 +8,53 @@
         <tab id="vendit" translate="label" sortOrder="210">
             <label>Vendit</label>
         </tab>
-        <section id="vendit_export" translate="label" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-            <label>Export</label>
+        <section id="vendit" translate="label" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+            <label>General Configuration</label>
             <tab>vendit</tab>
             <resource>ReachDigital_Vendit::config</resource>
-            <group id="export_settings" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Export Settings</label>
+            <group id="directory_mapping" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Directory Mapping</label>
+                <comment><![CDATA[All directories will be located under <code>var/</code>]]></comment>
+                <group id="import" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Import</label>
+                    <field id="product" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Products</label>
+                    </field>
+                    <field id="stock" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Stock</label>
+                    </field>
+                    <field id="category" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Categories</label>
+                        <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
+                    </field>
+                    <field id="customer" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Customers</label>
+                    </field>
+                </group>
+                <group id="export" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Export</label>
+                    <field id="product" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Products</label>
+                    </field>
+                    <field id="stock" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Stock</label>
+                    </field>
+                    <field id="category" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Categories</label>
+                        <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
+                    </field>
+                    <field id="customer" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Customers</label>
+                    </field>
+                </group>
+            </group>
+        </section>
+        <section id="vendit_export" translate="label" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+            <label>Manual Export</label>
+            <tab>vendit</tab>
+            <resource>ReachDigital_Vendit::config</resource>
+            <group id="export" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Manual Export</label>
                 <field id="manual_category_export" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Manual Category Export</label>
                     <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\CategoryExportButton</frontend_model>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright © Reach Digital (http://www.reachdigital.io/)
+  ~ See LICENSE.txt for license details.
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <vendit>
+            <directory_mapping>
+                <import>
+                    <product>vendit/import/products</product>
+                    <stock>vendit/import/stock</stock>
+                    <category>vendit/import/categories</category>
+                    <customer>vendit/import/customers</customer>
+                </import>
+                <export>
+                    <product>vendit/export/products</product>
+                    <stock>vendit/export/stock</stock>
+                    <category>vendit/export/categories</category>
+                    <customer>vendit/export/customers</customer>
+                </export>
+            </directory_mapping>
+        </vendit>
+    </default>
+</config>

@@ -8,27 +8,44 @@ declare(strict_types=1);
 
 namespace ReachDigital\Vendit\Model;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Io\File as IoFile;
 
 class Config
 {
-    const DIRECTORY_MAIN = 'vendit';
-    const DIRECTORY_EXPORT = 'export';
-    const DIRECTORY_IMPORT = 'import';
+    const TYPE_PRODUCT = 'product';
+    const TYPE_CATEGORY = 'category';
+    const TYPE_STOCK = 'stock';
+    const TYPE_CUSTOMER = 'customer';
 
-    public function __construct(public DirectoryList $directoryList, public IoFile $ioFile)
-    {
+    const EXPORT = 'export';
+    const IMPORT = 'import';
+
+    public function __construct(
+        private readonly DirectoryList $directoryList,
+        private readonly IoFile $ioFile,
+        private readonly ScopeConfigInterface $scopeConfig,
+    ) {
     }
 
-    public function getFilePath(string $filename, string $type = self::DIRECTORY_EXPORT): string
+    public function getImportFilePath(string $filename, $entityType): string
+    {
+        return $this->getFilePath($filename, self::IMPORT, $entityType);
+    }
+
+    public function getExportFilePath(string $filename, string $entityType): string
+    {
+        return $this->getFilePath($filename, self::EXPORT, $entityType);
+    }
+
+    protected function getFilePath(string $filename, string $type, string $entityType): string
     {
         $directory =
             $this->directoryList->getPath('var') .
             DIRECTORY_SEPARATOR .
-            self::DIRECTORY_MAIN .
-            DIRECTORY_SEPARATOR .
-            $type;
+            trim($this->scopeConfig->getValue(sprintf('vendit/directory_mapping/%s/%s', $type, $entityType)), '/');
+
         if (!$this->ioFile->fileExists($directory)) {
             $this->ioFile->mkdir($directory, 0775);
         }

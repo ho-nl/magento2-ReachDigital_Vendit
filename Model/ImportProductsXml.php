@@ -27,7 +27,7 @@ class ImportProductsXml
 
     public function execute(): void
     {
-        $xmlFile = $this->config->getFilePath(self::FILENAME, Config::DIRECTORY_IMPORT);
+        $xmlFile = $this->config->getImportFilePath(self::FILENAME, Config::TYPE_PRODUCT);
 
         if (!file_exists($xmlFile)) {
             throw new \Exception(sprintf('Products import XML file not found (%s)', self::FILENAME));

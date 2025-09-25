@@ -100,7 +100,7 @@ class ExportCategoriesXml
 
     public function getFilePath(): string
     {
-        return $this->venditConfig->getFilePath($this->getFilename());
+        return $this->venditConfig->getExportFilePath($this->getFilename(), Config::TYPE_CATEGORY);
     }
 
     public function getGuid(string $categoryId): string
