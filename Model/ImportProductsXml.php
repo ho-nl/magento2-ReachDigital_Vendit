@@ -116,7 +116,16 @@ class ImportProductsXml
             'allowed_error_count' => 0,
         ]);
 
-        $this->importModel->validateSource($sourceAdapter);
+        $validationResult = $this->importModel->validateSource($sourceAdapter);
+
+        if (!$validationResult) {
+            $errorAggregator = $this->importModel->getErrorAggregator();
+            $errorMessages = [];
+            foreach ($errorAggregator->getAllErrors() as $error) {
+                $errorMessages[] = $error->getErrorMessage();
+            }
+            throw new \Exception(sprintf('Product import validation failed with %s errors: %s', count($errorMessages), implode(', ', $errorMessages)));
+        }
 
         $errorAggregator = $this->importModel->getErrorAggregator();
         $errorAggregator->initValidationStrategy(

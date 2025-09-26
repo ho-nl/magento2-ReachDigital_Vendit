@@ -8,22 +8,27 @@ declare(strict_types=1);
 
 namespace ReachDigital\Vendit\Console\Command;
 
+use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
+use ReachDigital\Vendit\Model\ImportCustomersXml;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use ReachDigital\Vendit\Model\ExportOrdersXml;
 
-class ExportOrders extends Command
+class ImportCustomers extends Command
 {
-    public function __construct(public ExportOrdersXml $exporter, string $name = null)
-    {
-        parent::__construct($name);
+    public function __construct(
+        private readonly ImportCustomersXml $importer,
+        private readonly State $state
+    ) {
+        parent::__construct();
     }
 
     protected function configure(): void
     {
-        $this->setName('vendit:export:orders')->setDescription('Export all orders to XML');
+        $this->setName('vendit:import:customers')->setDescription(
+            'Import all customers from XML file supplied by Vendit'
+        );
 
         parent::configure();
     }
@@ -31,9 +36,14 @@ class ExportOrders extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
-            $this->exporter->execute();
-            // @todo notify number of orders exported
-            $output->writeln('<info>Orders successfully exported to ' . $this->exporter->getFilePath() . '</info>');
+            $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_ADMINHTML);
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+            // Area code already set, continue
+        }
+
+        try {
+            $this->importer->execute();
+            $output->writeln('<info>Customer(s) successfully imported</info>');
 
             return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {
