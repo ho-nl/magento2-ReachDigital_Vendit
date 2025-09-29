@@ -20,15 +20,11 @@ class ExportOrdersXml
         private readonly SearchCriteriaBuilder $searchCriteriaBuilder,
         private readonly DateTime $dateTime,
         private readonly Config $venditConfig,
-        private readonly ExportedOrderResource $exportedOrderResource, // add this
+        private readonly ExportedOrderResource $exportedOrderResource,
     ) {
     }
 
-    /**
-     * @todo prevent exporting when file already exists?
-     *       wait until the file is read or moved by Vendit?
-     */
-    public function execute(): void
+    public function execute(): int
     {
         $doc = new \DOMDocument('1.0', 'utf-16');
         $doc->formatOutput = true;
@@ -54,14 +50,20 @@ class ExportOrdersXml
         }
         $orderRepository = $this->orderRepository->getList($searchCriteriaBuilder->create());
 
+        $i = 0;
         foreach ($orderRepository->getItems() as $order) {
             // Export order as XML
             $this->addOrderToXml($doc, $orders, $order);
+
             // Mark order as exported
             $this->exportedOrderResource->markOrderAsExported((string) $order->getIncrementId());
+
+            $i++;
         }
 
         $doc->save($this->getFilePath());
+
+        return $i;
     }
 
     public function addOrderToXml(\DOMDocument $doc, \DOMElement $parentNode, $order): void

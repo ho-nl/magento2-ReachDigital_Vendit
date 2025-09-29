@@ -31,10 +31,17 @@ class ExportOrders extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
-            $this->exporter->execute();
-            // @todo notify number of orders exported
-            $output->writeln('<info>Orders successfully exported to ' . $this->exporter->getFilePath() . '</info>');
+            $exported = $this->exporter->execute();
 
+            $output->writeln(
+                $exported
+                    ? sprintf(
+                        '<info>Successfully exported %s order(s) to %s</info>',
+                        $exported,
+                        $this->exporter->getFilePath()
+                    )
+                    : '<info>No orders found to be exported.</info>'
+            );
             return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {
             $output->writeln('<error>Error: ' . $e->getMessage() . '</error>');
