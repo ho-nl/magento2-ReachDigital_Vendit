@@ -15,8 +15,6 @@ use ReachDigital\Vendit\Model\ResourceModel\ExportedOrder as ExportedOrderResour
 
 class ExportOrdersXml
 {
-    const FILENAME = 'orders.xml';
-
     public function __construct(
         private readonly OrderRepositoryInterface $orderRepository,
         private readonly SearchCriteriaBuilder $searchCriteriaBuilder,
@@ -135,13 +133,8 @@ class ExportOrdersXml
         // $orderNode->appendChild($doc->createElement('CustomerNumber', ''));
     }
 
-    public function getFilename(): string
-    {
-        return self::FILENAME;
-    }
-
     public function getFilePath(): string
     {
-        return $this->venditConfig->getExportFilePath($this->getFilename(), Config::TYPE_PRODUCT);
+        return $this->venditConfig->getExportFilePath(Config::TYPE_PRODUCT);
     }
 }

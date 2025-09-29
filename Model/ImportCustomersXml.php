@@ -21,8 +21,6 @@ use Zend_Locale_Data;
 
 class ImportCustomersXml
 {
-    const FILENAME = 'Customers.xml';
-
     public function __construct(
         private readonly Config $config,
         private readonly ImportFactory $importModelFactory,
@@ -35,10 +33,10 @@ class ImportCustomersXml
 
     public function execute(): void
     {
-        $xmlFile = $this->config->getImportFilePath(self::FILENAME, Config::TYPE_CUSTOMER);
+        $xmlFile = $this->config->getImportFilePath(Config::TYPE_CUSTOMER);
 
         if (!file_exists($xmlFile)) {
-            throw new \Exception(sprintf('Customer import XML file not found (%s)', self::FILENAME));
+            throw new \Exception(sprintf('Customer import XML file not found (%s)', $xmlFile));
         }
         $xml = simplexml_load_file($xmlFile);
 

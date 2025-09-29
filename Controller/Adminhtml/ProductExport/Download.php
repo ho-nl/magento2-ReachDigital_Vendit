@@ -29,8 +29,8 @@ class Download extends Action
 
     public function execute(): Raw|Redirect
     {
-        $fileName = $this->exporter->getFilename();
         $filePath = $this->exporter->getFilePath();
+        $fileName = basename($filePath);
 
         if (!file_exists($filePath)) {
             $this->messageManager->addErrorMessage(__('Export file not found'));

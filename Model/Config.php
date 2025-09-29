@@ -14,6 +14,8 @@ use Magento\Framework\Filesystem\Io\File as IoFile;
 
 class Config
 {
+    const DIR_MAPPING_CONFIG_PATH = 'vendit/directory_mapping';
+
     const TYPE_PRODUCT = 'product';
     const TYPE_CATEGORY = 'category';
     const TYPE_STOCK = 'stock';
@@ -29,22 +31,25 @@ class Config
     ) {
     }
 
-    public function getImportFilePath(string $filename, $entityType): string
+    public function getImportFilePath($entityType): string
     {
-        return $this->getFilePath($filename, self::IMPORT, $entityType);
+        return $this->getFilePath($entityType, self::IMPORT);
     }
 
-    public function getExportFilePath(string $filename, string $entityType): string
+    public function getExportFilePath(string $entityType): string
     {
-        return $this->getFilePath($filename, self::EXPORT, $entityType);
+        return $this->getFilePath($entityType, self::EXPORT);
     }
 
-    protected function getFilePath(string $filename, string $type, string $entityType): string
+    protected function getFilePath(string $entityType, string $type): string
     {
+        $path = trim($this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/%s/%s_path', $type, $entityType)), '/');
+        $filename = trim($this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/%s/%s_file', $type, $entityType)), '/');
+
         $directory =
             $this->directoryList->getPath('var') .
             DIRECTORY_SEPARATOR .
-            trim($this->scopeConfig->getValue(sprintf('vendit/directory_mapping/%s/%s', $type, $entityType)), '/');
+            $path;
 
         if (!$this->ioFile->fileExists($directory)) {
             $this->ioFile->mkdir($directory, 0775);

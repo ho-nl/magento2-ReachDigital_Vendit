@@ -13,8 +13,6 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
 
 class ExportCategoriesXml
 {
-    const FILENAME = 'categories.xml';
-
     const ROOT_CATEGORY_ID = 2;
 
     public function __construct(
@@ -93,14 +91,9 @@ class ExportCategoriesXml
         }
     }
 
-    public function getFilename(): string
-    {
-        return self::FILENAME;
-    }
-
     public function getFilePath(): string
     {
-        return $this->venditConfig->getExportFilePath($this->getFilename(), Config::TYPE_CATEGORY);
+        return $this->venditConfig->getExportFilePath(Config::TYPE_CATEGORY);
     }
 
     public function getGuid(string $categoryId): string

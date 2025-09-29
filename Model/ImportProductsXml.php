@@ -16,8 +16,6 @@ use Magento\ImportExport\Model\Import\Adapter;
 
 class ImportProductsXml
 {
-    const FILENAME = 'Products.xml';
-
     public function __construct(
         private readonly Config $config,
         private readonly Import $importModel,
@@ -27,10 +25,10 @@ class ImportProductsXml
 
     public function execute(): void
     {
-        $xmlFile = $this->config->getImportFilePath(self::FILENAME, Config::TYPE_PRODUCT);
+        $xmlFile = $this->config->getImportFilePath(Config::TYPE_PRODUCT);
 
         if (!file_exists($xmlFile)) {
-            throw new \Exception(sprintf('Products import XML file not found (%s)', self::FILENAME));
+            throw new \Exception(sprintf('Products import XML file not found (%s)', $xmlFile));
         }
         $xml = simplexml_load_file($xmlFile);
 

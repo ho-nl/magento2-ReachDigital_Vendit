@@ -26,8 +26,6 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
 
 class ExportProductsXml
 {
-    const FILENAME = 'products.xml';
-
     // @todo configurable? from default country/tax rule?
     const TAX_PERCENTAGE = 21;
 
@@ -313,14 +311,9 @@ class ExportProductsXml
         return $doc->save($this->getFilePath());
     }
 
-    public function getFilename(): string
-    {
-        return self::FILENAME;
-    }
-
     public function getFilePath(): string
     {
-        return $this->venditConfig->getExportFilePath($this->getFilename(), Config::TYPE_PRODUCT);
+        return $this->venditConfig->getExportFilePath(Config::TYPE_PRODUCT);
     }
 
     public function append(

@@ -17,33 +17,59 @@
                 <comment><![CDATA[All directories will be located under <code>var/</code>]]></comment>
                 <group id="import" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import</label>
-                    <field id="product" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Products</label>
+                    <field id="product_path" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Products File Path</label>
                     </field>
-                    <field id="stock" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Stock</label>
+                    <field id="product_file" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Products File</label>
                     </field>
-                    <field id="category" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Categories</label>
+                    <field id="stock_path" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Stock File Path</label>
+                    </field>
+                    <field id="stock_file" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Stock File</label>
+                    </field>
+                    <field id="category_path" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Categories File Path</label>
                         <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
                     </field>
-                    <field id="customer" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Customers</label>
+                    <field id="category_file" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Categories File</label>
+                        <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
+                    </field>
+                    <field id="customer_path" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Customers File Path</label>
+                    </field>
+                    <field id="customer_file" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Customers File</label>
                     </field>
                 </group>
                 <group id="export" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Export</label>
-                    <field id="product" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <field id="product_path" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Products</label>
                     </field>
-                    <field id="stock" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <field id="product_file" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Products</label>
+                    </field>
+                    <field id="stock_path" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Stock</label>
                     </field>
-                    <field id="category" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <field id="stock_file" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Stock</label>
+                    </field>
+                    <field id="category_path" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Categories</label>
                         <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
                     </field>
-                    <field id="customer" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <field id="category_file" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Categories</label>
+                        <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
+                    </field>
+                    <field id="customer_path" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Customers</label>
+                    </field>
+                    <field id="customer_file" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Customers</label>
                     </field>
                 </group>

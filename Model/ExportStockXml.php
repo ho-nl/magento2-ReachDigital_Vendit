@@ -23,8 +23,6 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
 
 class ExportStockXml
 {
-    const FILENAME = 'stock.xml';
-
     const NODE_TYPE_STRING = 'string';
     const NODE_TYPE_NUMBER = 'number';
 
@@ -124,14 +122,9 @@ class ExportStockXml
         return $doc->save($this->getFilePath());
     }
 
-    public function getFilename(): string
-    {
-        return self::FILENAME;
-    }
-
     public function getFilePath(): string
     {
-        return $this->venditConfig->getExportFilePath($this->getFilename(), Config::TYPE_STOCK);
+        return $this->venditConfig->getExportFilePath(Config::TYPE_STOCK);
     }
 
     public function getMemoryUsage(): string
