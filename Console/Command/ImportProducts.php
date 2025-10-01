@@ -42,7 +42,7 @@ class ImportProducts extends Command
         }
 
         try {
-            $this->importer->execute();
+            $this->importer->run();
             $output->writeln('<info>Product(s) successfully imported</info>');
 
             return Cli::RETURN_SUCCESS;
