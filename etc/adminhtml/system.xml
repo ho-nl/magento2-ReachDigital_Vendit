@@ -12,6 +12,15 @@
             <label>General Configuration</label>
             <tab>vendit</tab>
             <resource>ReachDigital_Vendit::config</resource>
+            <group id="attribute_mapping" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Product Attribute Mapping</label>
+                <comment><![CDATA[Map Vendit Specs to Magento product attributes. Spec names are case-sensitive.]]></comment>
+                <field id="mappings" translate="label" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Attribute Mappings</label>
+                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\Form\Field\AttributeMapping</frontend_model>
+                    <backend_model>ReachDigital\Vendit\Model\Config\Backend\AttributeMapping</backend_model>
+                </field>
+            </group>
             <group id="directory_mapping" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Directory Mapping</label>
                 <comment><![CDATA[All directories will be located under <code>var/</code>]]></comment>

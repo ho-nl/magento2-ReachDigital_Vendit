@@ -1,0 +1,14 @@
+.config#vendit_attribute_mapping {
+  colgroup.label,
+  td.label {
+    width: 15%;
+  }
+  colgroup.value,
+  td.value {
+    width: 85%;
+  }
+  .admin__control-table td:first-child,
+  .admin__control-table th:first-child {
+    width: 60%;
+  }
+}

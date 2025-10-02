@@ -19,6 +19,7 @@ use Magento\Framework\Filesystem;
 use Magento\ImportExport\Model\Import;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
 use ReachDigital\Quickjewels\Import\RowModifier\AttributeOptionCreatorFactory;
+use ReachDigital\Vendit\Model\Config\AttributeMappingConfig;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Stopwatch\Stopwatch;
 
@@ -33,6 +34,7 @@ class ImportProductsXml extends ImportProfile
         private readonly AttributeOptionCreatorFactory $attributeOptionCreatorFactory,
         private readonly Config $config,
         private readonly Filesystem $filesystem,
+        private readonly AttributeMappingConfig $attributeMappingConfig,
     ) {
         parent::__construct($objectManagerFactory, $stopwatch, $consoleOutput, $log);
     }
@@ -65,9 +67,8 @@ class ImportProductsXml extends ImportProfile
             return null;
         };
 
-        // Map XML data to Magento product import format
-        $itemMapper = $this->itemMapperFactory->create([
-            'mapping' => [
+        // Build base mapping
+        $mapping = [
                 'sku' => $skuResolver,
                 'store_view_code' => null,
                 'attribute_set_code' => 'Default',
@@ -180,7 +181,22 @@ class ImportProductsXml extends ImportProfile
                 '_is_configurable_parent' => function ($item) {
                     return $item['_is_configurable_parent'] ?? null;
                 },
-            ],
+        ];
+
+        // Add dynamically mapped attributes from config
+        $attributeMappings = $this->attributeMappingConfig->getMappings();
+        foreach ($attributeMappings as $specName => $attributeCode) {
+            // Skip if already mapped (like revenue_group)
+            if (isset($mapping[$attributeCode])) {
+                continue;
+            }
+
+            $mapping[$attributeCode] = fn($item) => $this->getSpecValue($item, $specName);
+        }
+
+        // Map XML data to Magento product import format
+        $itemMapper = $this->itemMapperFactory->create([
+            'mapping' => $mapping,
         ]);
 
         $itemMapper->setItems($items);
