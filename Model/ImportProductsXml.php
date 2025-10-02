@@ -11,11 +11,14 @@ namespace ReachDigital\Vendit\Model;
 use Ho\Import\Logger\Log;
 use Ho\Import\Model\ImportProfile;
 use Ho\Import\RowModifier\ItemMapperFactory;
+use Magento\Catalog\Model\Product;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem;
+use Magento\ImportExport\Model\Import;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
+use ReachDigital\Quickjewels\Import\RowModifier\AttributeOptionCreatorFactory;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Stopwatch\Stopwatch;
 
@@ -27,6 +30,7 @@ class ImportProductsXml extends ImportProfile
         ConsoleOutput $consoleOutput,
         Log $log,
         private readonly ItemMapperFactory $itemMapperFactory,
+        private readonly AttributeOptionCreatorFactory $attributeOptionCreatorFactory,
         private readonly Config $config,
         private readonly Filesystem $filesystem,
     ) {
@@ -36,8 +40,8 @@ class ImportProductsXml extends ImportProfile
     public function getConfig(): array
     {
         return [
-            'behavior' => \Magento\ImportExport\Model\Import::BEHAVIOR_APPEND,
-            'entity' => 'catalog_product',
+            'behavior' => Import::BEHAVIOR_APPEND,
+            'entity' => Product::ENTITY,
             'validation_strategy' => ProcessingErrorAggregatorInterface::VALIDATION_STRATEGY_SKIP_ERRORS,
             'allowed_error_count' => 100,
         ];
@@ -167,7 +171,7 @@ class ImportProductsXml extends ImportProfile
                         return null;
                     }
                     $size = $item['ProductVariations']['ProductVariation']['Size'] ?? null;
-                    return $size && !is_array($size) ? (string) $size : null;
+                    return $size && !is_array($size) ? strtolower(trim($size)) : null;
                 },
                 // Preserve internal fields for configurable building
                 '_configurable_parent_sku' => function ($item) {
@@ -182,10 +186,18 @@ class ImportProductsXml extends ImportProfile
         $itemMapper->setItems($items);
         $itemMapper->process();
 
-        $this->saveProcessedItems($items);
+        // Create attribute options for maten if they don't exist yet
+        $attributeOptionCreator = $this->attributeOptionCreatorFactory->create([
+            'attributes' => ['maten'],
+        ]);
+        $attributeOptionCreator->setItems($items);
+        $attributeOptionCreator->process();
 
         // Build configurable_variations field for configurable parents
         $this->buildConfigurableVariations($items);
+
+        // Save processed items for debugging (includes configurable_variations)
+        $this->saveProcessedItems($items);
 
         // Remove internal fields that shouldn't be passed to Magento importer
         foreach ($items as &$item) {
@@ -233,7 +245,8 @@ class ImportProductsXml extends ImportProfile
                 $variationParts = ['sku=' . $childSku];
 
                 // Add the maten (size) attribute if it exists
-                if (isset($child['maten']) && !empty($child['maten'])) {
+                // Use the same value that was set in the child product (already normalized)
+                if (!empty($child['maten'])) {
                     $variationParts[] = 'maten=' . $child['maten'];
                 }
 
@@ -285,10 +298,14 @@ class ImportProductsXml extends ImportProfile
 
             if ($hasOneVariant) {
                 // Simple product: single variation
-                $items = array_merge($items, $this->createSimpleProduct($productArray));
+                foreach ($this->createSimpleProduct($productArray) as $sku => $product) {
+                    $items[$sku] = $product;
+                }
             } else {
                 // Configurable product: multiple variations
-                $items = array_merge($items, $this->createConfigurableProduct($productArray));
+                foreach ($this->createConfigurableProduct($productArray) as $sku => $product) {
+                    $items[$sku] = $product;
+                }
             }
         }
 
