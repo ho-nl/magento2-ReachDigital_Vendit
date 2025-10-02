@@ -15,13 +15,13 @@
             <group id="attribute_mapping" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Product Attribute Mapping</label>
                 <comment><![CDATA[Map Vendit Specs to Magento product attributes. Spec names are case-sensitive.]]></comment>
-                <field id="size_attribute" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                <field id="size_attribute" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Size Attribute (Configurable Variation)</label>
                     <comment><![CDATA[Select which product attribute to use for configurable product size variations (maps to Vendit 'Size' field).]]></comment>
                     <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
                 </field>
-                <field id="mappings" translate="label" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Attribute Mappings</label>
+                <field id="attributes" translate="label" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Attribute Mapping</label>
                     <frontend_model>ReachDigital\Vendit\Block\Adminhtml\Form\Field\AttributeMapping</frontend_model>
                     <backend_model>ReachDigital\Vendit\Model\Config\Backend\AttributeMapping</backend_model>
                 </field>

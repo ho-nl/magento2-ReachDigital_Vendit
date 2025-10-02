@@ -118,6 +118,7 @@ class ImportProductsXml extends ImportProfile
                 $price = $item['ProductVariations']['ProductVariation']['SalesPriceEx'] ?? 0;
                 return is_numeric($price) ? (float) $price : 0;
             },
+            // @todo configurable tax class id
             'tax_class_id' => 2,
             'visibility' => function ($item) {
                 // Configurable parents should be visible
@@ -146,7 +147,6 @@ class ImportProductsXml extends ImportProfile
                 $status = $item['ProductVariations']['ProductVariation']['AvailabilityStatus'] ?? '';
                 return (string) $status === 'Leverbaar' ? '1' : '0';
             },
-            'weight' => 1.0,
             'manage_stock' => 1,
             'use_config_min_qty' => '1',
             'use_config_backorders' => '1',
@@ -177,6 +177,20 @@ class ImportProductsXml extends ImportProfile
                 }
                 return null;
             },
+            'news_from_date' => function ($item) {
+                if (isset($item['AvailableFrom']) && !is_array($item['AvailableFrom'])) {
+                    $value = (string) $item['AvailableFrom'];
+                    return !empty($value) ? $value : null;
+                }
+                return null;
+            },
+            'news_to_date' => function ($item) {
+                if (isset($item['AvailableUntil']) && !is_array($item['AvailableUntil'])) {
+                    $value = (string) $item['AvailableUntil'];
+                    return !empty($value) ? $value : null;
+                }
+                return null;
+            },
             'revenue_group' => fn($item) => $this->getSpecValue($item, 'revenue_group'),
             // Preserve internal fields for configurable building
             '_configurable_parent_sku' => function ($item) {
@@ -198,8 +212,8 @@ class ImportProductsXml extends ImportProfile
         };
 
         // Add dynamically mapped attributes from config
-        $attributeMappings = $this->attributeMappingConfig->getMappings();
-        foreach ($attributeMappings as $specName => $attributeCode) {
+        $attributeMapping = $this->attributeMappingConfig->getMapping();
+        foreach ($attributeMapping as $specName => $attributeCode) {
             // Skip if already mapped
             if (isset($mapping[$attributeCode])) {
                 continue;

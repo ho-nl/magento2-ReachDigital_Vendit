@@ -56,11 +56,6 @@ class ProductAttributeColumn extends Select
             ->setValue('static')
             ->create();
         $staticFilterGroup = $this->filterGroupBuilder->create()->setFilters([$staticFilter]);
-        $userDefinedFilter = $this->filterBuilder
-            ->setField('is_user_defined')
-            ->setValue('1')
-            ->create();
-        $userDefinedFilterGroup = $this->filterGroupBuilder->create()->setFilters([$userDefinedFilter]);
         $sortOrder = $this->sortOrderBuilder
             ->setField('frontend_label')
             ->setDirection(\Laminas\Db\Sql\Select::ORDER_ASCENDING)
@@ -69,7 +64,7 @@ class ProductAttributeColumn extends Select
         $searchCriteria = $this->searchCriteriaBuilder
             ->create()
             ->setSortOrders([$sortOrder])
-            ->setFilterGroups([$staticFilterGroup, $userDefinedFilterGroup]);
+            ->setFilterGroups([$staticFilterGroup]);
         $attributes = $this->attributeRepository->getList($searchCriteria)->getItems();
 
         $options = [
@@ -79,6 +74,10 @@ class ProductAttributeColumn extends Select
             ],
         ];
         foreach ($attributes as $attribute) {
+            if (!$attribute->getDefaultFrontendLabel()) {
+                continue;
+            }
+
             $options[] = [
                 'value' => $attribute->getAttributeCode(),
                 'label' => sprintf('%s (%s)', $attribute->getDefaultFrontendLabel(), $attribute->getAttributeCode()),

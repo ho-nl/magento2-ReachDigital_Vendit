@@ -13,7 +13,7 @@ use Magento\Framework\Serialize\SerializerInterface;
 
 class AttributeMappingConfig
 {
-    private const XML_PATH_ATTRIBUTE_MAPPINGS = 'vendit/attribute_mapping/mappings';
+    public const XML_PATH_ATTRIBUTE_MAPPING = 'vendit/attribute_mapping/attributes';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,
@@ -21,35 +21,31 @@ class AttributeMappingConfig
     ) {
     }
 
-    /**
-     * Get attribute mappings as an associative array
-     * Returns: ['spec_name' => 'attribute_code', ...]
-     */
-    public function getMappings(): array
+    public function getMapping(): array
     {
-        $value = $this->scopeConfig->getValue(self::XML_PATH_ATTRIBUTE_MAPPINGS);
+        $value = $this->scopeConfig->getValue(self::XML_PATH_ATTRIBUTE_MAPPING);
 
         if (!$value) {
             return [];
         }
 
         try {
-            $mappings = $this->serializer->unserialize($value);
+            $mapping = $this->serializer->unserialize($value);
 
-            if (!is_array($mappings)) {
+            if (!is_array($mapping)) {
                 return [];
             }
 
             // Convert to spec_name => attribute_code format
             $result = [];
-            foreach ($mappings as $mapping) {
+            foreach ($mapping as $attribute) {
                 if (
-                    isset($mapping['spec_name']) &&
-                    isset($mapping['attribute_code']) &&
-                    !empty($mapping['spec_name']) &&
-                    !empty($mapping['attribute_code'])
+                    isset($attribute['spec_name']) &&
+                    isset($attribute['attribute_code']) &&
+                    !empty($attribute['spec_name']) &&
+                    !empty($attribute['attribute_code'])
                 ) {
-                    $result[$mapping['spec_name']] = $mapping['attribute_code'];
+                    $result[$attribute['spec_name']] = $attribute['attribute_code'];
                 }
             }
 
@@ -64,8 +60,8 @@ class AttributeMappingConfig
      */
     public function isMapped(string $specName): bool
     {
-        $mappings = $this->getMappings();
-        return isset($mappings[$specName]);
+        $mapping = $this->getMapping();
+        return isset($mapping[$specName]);
     }
 
     /**
@@ -73,7 +69,7 @@ class AttributeMappingConfig
      */
     public function getAttributeCode(string $specName): ?string
     {
-        $mappings = $this->getMappings();
-        return $mappings[$specName] ?? null;
+        $mapping = $this->getMapping();
+        return $mapping[$specName] ?? null;
     }
 }
