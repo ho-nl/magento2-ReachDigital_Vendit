@@ -69,118 +69,118 @@ class ImportProductsXml extends ImportProfile
 
         // Build base mapping
         $mapping = [
-                'sku' => $skuResolver,
-                'store_view_code' => null,
-                'attribute_set_code' => 'Default',
-                'product_type' => function ($item) {
-                    return isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']
-                        ? 'configurable'
-                        : 'simple';
-                },
-                'categories' => null,
-                'product_websites' => 'base',
-                'name' => function ($item) {
-                    return isset($item['Description']) && !is_array($item['Description'])
-                        ? (string) $item['Description']
-                        : '';
-                },
-                'description' => function ($item) {
-                    if (isset($item['BigInfo']) && !is_array($item['BigInfo'])) {
-                        $bigInfo = (string) $item['BigInfo'];
-                        return !empty($bigInfo) ? $bigInfo : null;
-                    }
+            'sku' => $skuResolver,
+            'store_view_code' => null,
+            'attribute_set_code' => 'Default',
+            'product_type' => function ($item) {
+                return isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']
+                    ? 'configurable'
+                    : 'simple';
+            },
+            'categories' => null,
+            'product_websites' => 'base',
+            'name' => function ($item) {
+                return isset($item['Description']) && !is_array($item['Description'])
+                    ? (string) $item['Description']
+                    : '';
+            },
+            'description' => function ($item) {
+                if (isset($item['BigInfo']) && !is_array($item['BigInfo'])) {
+                    $bigInfo = (string) $item['BigInfo'];
+                    return !empty($bigInfo) ? $bigInfo : null;
+                }
+                return null;
+            },
+            'short_description' => function ($item) {
+                if (isset($item['SmallInfo']) && !is_array($item['SmallInfo'])) {
+                    $smallInfo = (string) $item['SmallInfo'];
+                    return !empty($smallInfo) ? html_entity_decode(strip_tags($smallInfo)) : null;
+                }
+                return null;
+            },
+            'price' => function ($item) {
+                // Skip price for configurable parents - will be derived from children
+                if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
                     return null;
-                },
-                'short_description' => function ($item) {
-                    if (isset($item['SmallInfo']) && !is_array($item['SmallInfo'])) {
-                        $smallInfo = (string) $item['SmallInfo'];
-                        return !empty($smallInfo) ? html_entity_decode(strip_tags($smallInfo)) : null;
-                    }
-                    return null;
-                },
-                'price' => function ($item) {
-                    // Skip price for configurable parents - will be derived from children
-                    if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
-                        return null;
-                    }
-                    $price = $item['ProductVariations']['ProductVariation']['SalesPriceEx'] ?? 0;
-                    return is_numeric($price) ? (float) $price : 0;
-                },
-                'tax_class_id' => 2,
-                'visibility' => function ($item) {
-                    // Configurable parents should be visible
-                    if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
-                        $visible = isset($item['Visible']) ? (string) $item['Visible'] : 'False';
-                        return $visible === 'True' ? 'Catalogus, zoeken' : 'Niet individueel zichtbaar';
-                    }
-                    // Simple products under configurables should not be individually visible
-                    if (isset($item['_configurable_parent_sku'])) {
-                        return 'Niet individueel zichtbaar';
-                    }
-                    // Standalone simple products
+                }
+                $price = $item['ProductVariations']['ProductVariation']['SalesPriceEx'] ?? 0;
+                return is_numeric($price) ? (float) $price : 0;
+            },
+            'tax_class_id' => 2,
+            'visibility' => function ($item) {
+                // Configurable parents should be visible
+                if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
                     $visible = isset($item['Visible']) ? (string) $item['Visible'] : 'False';
                     return $visible === 'True' ? 'Catalogus, zoeken' : 'Niet individueel zichtbaar';
-                },
-                'status' => function ($item) {
-                    $deleted = isset($item['IsDeleted']) ? (string) $item['IsDeleted'] : 'True';
-                    return $deleted === 'False' ? '1' : '0';
-                },
-                'qty' => 0,
-                'is_in_stock' => function ($item) {
-                    // Skip stock for configurable parents
-                    if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
-                        return null;
-                    }
-                    $status = $item['ProductVariations']['ProductVariation']['AvailabilityStatus'] ?? '';
-                    return (string) $status === 'Leverbaar' ? '1' : '0';
-                },
-                'weight' => 1.0,
-                'manage_stock' => 1,
-                'use_config_min_qty' => '1',
-                'use_config_backorders' => '1',
-                'use_config_min_sale_qty' => '1',
-                'use_config_max_sale_qty' => '1',
-                'use_config_notify_stock_qty' => '1',
-                'use_config_manage_stock' => '1',
-                'use_config_qty_increments' => '1',
-                'use_config_enable_qty_inc' => '1',
-                'meta_title' => function ($item) {
-                    if (isset($item['PageTitle']) && !is_array($item['PageTitle'])) {
-                        $title = (string) $item['PageTitle'];
-                        return !empty($title) ? $title : null;
-                    }
+                }
+                // Simple products under configurables should not be individually visible
+                if (isset($item['_configurable_parent_sku'])) {
+                    return 'Niet individueel zichtbaar';
+                }
+                // Standalone simple products
+                $visible = isset($item['Visible']) ? (string) $item['Visible'] : 'False';
+                return $visible === 'True' ? 'Catalogus, zoeken' : 'Niet individueel zichtbaar';
+            },
+            'status' => function ($item) {
+                $deleted = isset($item['IsDeleted']) ? (string) $item['IsDeleted'] : 'True';
+                return $deleted === 'False' ? '1' : '0';
+            },
+            'qty' => 0,
+            'is_in_stock' => function ($item) {
+                // Skip stock for configurable parents
+                if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
                     return null;
-                },
-                'meta_keywords' => function ($item) {
-                    if (isset($item['MetaKeywords']) && !is_array($item['MetaKeywords'])) {
-                        $keywords = (string) $item['MetaKeywords'];
-                        return !empty($keywords) ? $keywords : null;
-                    }
+                }
+                $status = $item['ProductVariations']['ProductVariation']['AvailabilityStatus'] ?? '';
+                return (string) $status === 'Leverbaar' ? '1' : '0';
+            },
+            'weight' => 1.0,
+            'manage_stock' => 1,
+            'use_config_min_qty' => '1',
+            'use_config_backorders' => '1',
+            'use_config_min_sale_qty' => '1',
+            'use_config_max_sale_qty' => '1',
+            'use_config_notify_stock_qty' => '1',
+            'use_config_manage_stock' => '1',
+            'use_config_qty_increments' => '1',
+            'use_config_enable_qty_inc' => '1',
+            'meta_title' => function ($item) {
+                if (isset($item['PageTitle']) && !is_array($item['PageTitle'])) {
+                    $title = (string) $item['PageTitle'];
+                    return !empty($title) ? $title : null;
+                }
+                return null;
+            },
+            'meta_keywords' => function ($item) {
+                if (isset($item['MetaKeywords']) && !is_array($item['MetaKeywords'])) {
+                    $keywords = (string) $item['MetaKeywords'];
+                    return !empty($keywords) ? $keywords : null;
+                }
+                return null;
+            },
+            'meta_description' => function ($item) {
+                if (isset($item['MetaDescription']) && !is_array($item['MetaDescription'])) {
+                    $description = (string) $item['MetaDescription'];
+                    return !empty($description) ? $description : null;
+                }
+                return null;
+            },
+            'revenue_group' => fn($item) => $this->getSpecValue($item, 'revenue_group'),
+            'maten' => function ($item) {
+                // Skip for configurable parents
+                if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
                     return null;
-                },
-                'meta_description' => function ($item) {
-                    if (isset($item['MetaDescription']) && !is_array($item['MetaDescription'])) {
-                        $description = (string) $item['MetaDescription'];
-                        return !empty($description) ? $description : null;
-                    }
-                    return null;
-                },
-                'revenue_group' => fn($item) => $this->getSpecValue($item, 'revenue_group'),
-                'maten' => function ($item) {
-                    // Skip for configurable parents
-                    if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
-                        return null;
-                    }
-                    $size = $item['ProductVariations']['ProductVariation']['Size'] ?? null;
-                    return $size && !is_array($size) ? strtolower(trim($size)) : null;
-                },
-                // Preserve internal fields for configurable building
-                '_configurable_parent_sku' => function ($item) {
-                    return $item['_configurable_parent_sku'] ?? null;
-                },
-                '_is_configurable_parent' => function ($item) {
-                    return $item['_is_configurable_parent'] ?? null;
-                },
+                }
+                $size = $item['ProductVariations']['ProductVariation']['Size'] ?? null;
+                return $size && !is_array($size) ? strtolower(trim($size)) : null;
+            },
+            // Preserve internal fields for configurable building
+            '_configurable_parent_sku' => function ($item) {
+                return $item['_configurable_parent_sku'] ?? null;
+            },
+            '_is_configurable_parent' => function ($item) {
+                return $item['_is_configurable_parent'] ?? null;
+            },
         ];
 
         // Add dynamically mapped attributes from config

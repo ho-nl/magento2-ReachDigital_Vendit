@@ -17,7 +17,7 @@ class AttributeMappingConfig
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $serializer,
     ) {
     }
 
@@ -43,8 +43,12 @@ class AttributeMappingConfig
             // Convert to spec_name => attribute_code format
             $result = [];
             foreach ($mappings as $mapping) {
-                if (isset($mapping['spec_name']) && isset($mapping['attribute_code'])
-                    && !empty($mapping['spec_name']) && !empty($mapping['attribute_code'])) {
+                if (
+                    isset($mapping['spec_name']) &&
+                    isset($mapping['attribute_code']) &&
+                    !empty($mapping['spec_name']) &&
+                    !empty($mapping['attribute_code'])
+                ) {
                     $result[$mapping['spec_name']] = $mapping['attribute_code'];
                 }
             }

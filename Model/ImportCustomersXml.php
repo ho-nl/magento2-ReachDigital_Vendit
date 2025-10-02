@@ -109,11 +109,7 @@ class ImportCustomersXml
     {
         /** @var Write $write */
         $write = $this->filesystem->getDirectoryWrite(DirectoryList::ROOT);
-        $sourceAdapter = Adapter::findAdapterFor(
-            $csvFilePath,
-            $write,
-            ','
-        );
+        $sourceAdapter = Adapter::findAdapterFor($csvFilePath, $write, ',');
 
         $import = $this->importModelFactory->create()->setData([
             'entity' => $entityTypeCode,
@@ -131,18 +127,20 @@ class ImportCustomersXml
             foreach ($errorAggregator->getAllErrors() as $error) {
                 $errorMessages[] = $error->getErrorMessage();
             }
-            throw new \Exception(sprintf(
-                'Customer import "%s" validation failed with %s errors: %s',
-                $entityTypeCode,
-                count($errorMessages),
-                implode(', ', $errorMessages))
+            throw new \Exception(
+                sprintf(
+                    'Customer import "%s" validation failed with %s errors: %s',
+                    $entityTypeCode,
+                    count($errorMessages),
+                    implode(', ', $errorMessages),
+                ),
             );
         }
 
         $errorAggregator = $import->getErrorAggregator();
         $errorAggregator->initValidationStrategy(
             $import->getData(Import::FIELD_NAME_VALIDATION_STRATEGY),
-            $import->getData(Import::FIELD_NAME_ALLOWED_ERROR_COUNT)
+            $import->getData(Import::FIELD_NAME_ALLOWED_ERROR_COUNT),
         );
 
         $import->importSource();
@@ -164,9 +162,15 @@ class ImportCustomersXml
                         if ((string) $contactNode->DefaultContact === 'true') {
                             $email = (string) $contactNode->EmailAddress;
                             // Firstname and lastname fallbacks to email if not present; they can't be empty
-                            $firstname = (string) ($contactNode->FirstName != '' ? $contactNode->FirstName : $contactNode->EmailAddress);
+                            $firstname =
+                                (string) ($contactNode->FirstName != ''
+                                    ? $contactNode->FirstName
+                                    : $contactNode->EmailAddress);
                             $middlename = (string) $contactNode->MiddleName;
-                            $lastname = (string) ($contactNode->LastName != '' ? $contactNode->LastName : $contactNode->EmailAddress);
+                            $lastname =
+                                (string) ($contactNode->LastName != ''
+                                    ? $contactNode->LastName
+                                    : $contactNode->EmailAddress);
                             break 2;
                         }
                     }
@@ -208,15 +212,16 @@ class ImportCustomersXml
             'firstname' => (string) ($firstname != '' ? $firstname : $emailAddress),
             'middlename' => (string) $addressNode->Contacts->Contact->MiddleName,
             'lastname' => (string) ($lastname != '' ? $lastname : $emailAddress),
-            'street' => (string) $addressNode->Street
-                . (!empty($addressNode->HouseNumber) ? ' ' . $addressNode->HouseNumber : '')
-                . (!empty($addressNode->HouseNumberSuffix) ? ' ' . $addressNode->HouseNumberSuffix : ''),
+            'street' =>
+                (string) $addressNode->Street .
+                (!empty($addressNode->HouseNumber) ? ' ' . $addressNode->HouseNumber : '') .
+                (!empty($addressNode->HouseNumberSuffix) ? ' ' . $addressNode->HouseNumberSuffix : ''),
             'city' => (string) $addressNode->City,
             'postcode' => (string) $addressNode->ZipCode,
             'country_id' => $this->getCountryCode((string) $addressNode->Country),
             'telephone' => (string) $telephone != '' ? (string) $telephone : '0000000000',
-            '_address_default_billing_' => ((string) $addressNode->DefaultAddress === 'true') ? 1 : 0,
-            '_address_default_shipping_' => ((string) $addressNode->DefaultAddress === 'true') ? 1 : 0,
+            '_address_default_billing_' => (string) $addressNode->DefaultAddress === 'true' ? 1 : 0,
+            '_address_default_shipping_' => (string) $addressNode->DefaultAddress === 'true' ? 1 : 0,
         ];
     }
 

@@ -43,7 +43,7 @@ class ExportProductsXml
         public ProductAttributeRepositoryInterface $productAttributeRepository,
         public SearchCriteriaBuilder $searchCriteriaBuilder,
         public StockRegistryInterface $stockRegistry,
-        public Config $venditConfig
+        public Config $venditConfig,
     ) {
     }
 
@@ -56,7 +56,7 @@ class ExportProductsXml
         $root->setAttributeNS(
             'http://www.w3.org/2000/xmlns/',
             'xmlns:xsi',
-            'http://www.w3.org/2001/XMLSchema-instance'
+            'http://www.w3.org/2001/XMLSchema-instance',
         );
         $doc->appendChild($root);
 
@@ -152,7 +152,7 @@ class ExportProductsXml
                 $searchCriteria = $this->searchCriteriaBuilder->addFilter(
                     'attribute_code',
                     ['color', 'populair', 'topmodel', 'brand2', 'lengte_armbanden'],
-                    'in'
+                    'in',
                 );
                 $attributes = $this->productAttributeRepository->getList($searchCriteria->create())->getItems();
                 $attributeIds = array_map(function (Attribute $attribute) {
@@ -172,7 +172,7 @@ class ExportProductsXml
                         break;
                     default:
                         throw new \Exception(
-                            sprintf('Export for product type \'%s\' not implemented', $product->getTypeId())
+                            sprintf('Export for product type \'%s\' not implemented', $product->getTypeId()),
                         );
                 }
 
@@ -205,9 +205,9 @@ class ExportProductsXml
                             sprintf(
                                 'Unsupported frontend input type (%s) for size attribute: %s',
                                 $frontendInputType,
-                                $sizeAttributeCode
-                            )
-                        )
+                                $sizeAttributeCode,
+                            ),
+                        ),
                     };
 
                     $attributesNode = $doc->createElement('Attributes');
@@ -226,7 +226,7 @@ class ExportProductsXml
                         $doc,
                         $node,
                         'AvailabilityStatus',
-                        $stockItem->getIsInStock() ? 'Leverbaar' : 'Niet leverbaar'
+                        $stockItem->getIsInStock() ? 'Leverbaar' : 'Niet leverbaar',
                     );
 
                     $barcodes = $doc->createElement('Barcodes');
@@ -261,13 +261,13 @@ class ExportProductsXml
                         $doc,
                         $node,
                         'ProductDescription',
-                        htmlspecialchars($childProduct->getShortDescription() ?? '')
+                        htmlspecialchars($childProduct->getShortDescription() ?? ''),
                     );
                     $this->append(
                         $doc,
                         $node,
                         'ProductSubDescription',
-                        htmlspecialchars($childProduct->getDescription() ?? '')
+                        htmlspecialchars($childProduct->getDescription() ?? ''),
                     );
 
                     $variationsNode->appendChild($node);
@@ -321,7 +321,7 @@ class ExportProductsXml
         DOMElement $node,
         string $name,
         mixed $value,
-        $type = self::NODE_TYPE_STRING
+        $type = self::NODE_TYPE_STRING,
     ): void {
         switch ($type) {
             case self::NODE_TYPE_NUMBER:

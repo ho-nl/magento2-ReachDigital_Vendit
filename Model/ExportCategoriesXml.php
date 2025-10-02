@@ -18,7 +18,7 @@ class ExportCategoriesXml
     public function __construct(
         public CategoryRepository $categoryRepo,
         public DateTime $dateTime,
-        public Config $venditConfig
+        public Config $venditConfig,
     ) {
     }
 

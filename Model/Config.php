@@ -43,13 +43,16 @@ class Config
 
     protected function getFilePath(string $entityType, string $type): string
     {
-        $path = trim($this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/%s/%s_path', $type, $entityType)), '/');
-        $filename = trim($this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/%s/%s_file', $type, $entityType)), '/');
+        $path = trim(
+            $this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/%s/%s_path', $type, $entityType)),
+            '/',
+        );
+        $filename = trim(
+            $this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/%s/%s_file', $type, $entityType)),
+            '/',
+        );
 
-        $directory =
-            $this->directoryList->getPath('var') .
-            DIRECTORY_SEPARATOR .
-            $path;
+        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $path;
 
         if (!$this->ioFile->fileExists($directory)) {
             $this->ioFile->mkdir($directory, 0775);

@@ -37,7 +37,7 @@ class ExportStockXml
         public ProductAttributeRepositoryInterface $productAttributeRepository,
         public SearchCriteriaBuilder $searchCriteriaBuilder,
         public StockRegistryInterface $stockRegistry,
-        public Config $venditConfig
+        public Config $venditConfig,
     ) {
     }
 
@@ -50,7 +50,7 @@ class ExportStockXml
         $root->setAttributeNS(
             'http://www.w3.org/2000/xmlns/',
             'xmlns:xsi',
-            'http://www.w3.org/2001/XMLSchema-instance'
+            'http://www.w3.org/2001/XMLSchema-instance',
         );
         $doc->appendChild($root);
 
