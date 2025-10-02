@@ -22,7 +22,7 @@ class TrimAttributeOptions extends Command
     public function __construct(
         private readonly ProductAttributeRepositoryInterface $attributeRepository,
         private readonly ResourceConnection $resourceConnection,
-        private readonly State $state
+        private readonly State $state,
     ) {
         parent::__construct();
     }
@@ -31,11 +31,7 @@ class TrimAttributeOptions extends Command
     {
         $this->setName('vendit:trim-attribute-options')
             ->setDescription('Trim whitespace from attribute option labels')
-            ->addArgument(
-                'attribute_code',
-                InputArgument::REQUIRED,
-                'Attribute code (e.g., maten)'
-            );
+            ->addArgument('attribute_code', InputArgument::REQUIRED, 'Attribute code');
 
         parent::configure();
     }
@@ -59,7 +55,8 @@ class TrimAttributeOptions extends Command
             $optionTable = $this->resourceConnection->getTableName('eav_attribute_option');
 
             // Get all option IDs for this attribute
-            $select = $connection->select()
+            $select = $connection
+                ->select()
                 ->from($optionTable, ['option_id'])
                 ->where('attribute_id = ?', $attribute->getAttributeId());
 
@@ -70,7 +67,8 @@ class TrimAttributeOptions extends Command
 
             foreach ($optionIds as $optionId) {
                 // Get all store-specific values for this option
-                $select = $connection->select()
+                $select = $connection
+                    ->select()
                     ->from($optionValueTable, ['value_id', 'store_id', 'value'])
                     ->where('option_id = ?', $optionId);
 
@@ -91,11 +89,13 @@ class TrimAttributeOptions extends Command
                         $connection->update(
                             $optionValueTable,
                             ['value' => $trimmedLabel],
-                            ['value_id = ?' => $storeValue['value_id']]
+                            ['value_id = ?' => $storeValue['value_id']],
                         );
                         $totalUpdates++;
 
-                        $output->writeln("  <info>Store {$storeValue['store_id']}: '{$originalLabel}' -> '{$trimmedLabel}'</info>");
+                        $output->writeln(
+                            "  <info>Store {$storeValue['store_id']}: '{$originalLabel}' -> '{$trimmedLabel}'</info>",
+                        );
                     }
                 }
 
@@ -104,7 +104,9 @@ class TrimAttributeOptions extends Command
                 }
             }
 
-            $output->writeln("<info>Trimmed {$optionsProcessed} option(s) across {$totalUpdates} store value(s)</info>");
+            $output->writeln(
+                "<info>Trimmed {$optionsProcessed} option(s) across {$totalUpdates} store value(s)</info>",
+            );
             return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {
             $output->writeln("<error>Error: {$e->getMessage()}</error>");

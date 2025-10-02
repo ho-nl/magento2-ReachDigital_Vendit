@@ -12,6 +12,7 @@ use Ho\Import\Logger\Log;
 use Ho\Import\Model\ImportProfile;
 use Ho\Import\RowModifier\ItemMapperFactory;
 use Magento\Catalog\Model\Product;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
 use Magento\Framework\Exception\FileSystemException;
@@ -25,6 +26,8 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class ImportProductsXml extends ImportProfile
 {
+    private const XML_PATH_SIZE_ATTRIBUTE = 'vendit/attribute_mapping/size_attribute';
+
     public function __construct(
         ObjectManagerFactory $objectManagerFactory,
         Stopwatch $stopwatch,
@@ -35,6 +38,7 @@ class ImportProductsXml extends ImportProfile
         private readonly Config $config,
         private readonly Filesystem $filesystem,
         private readonly AttributeMappingConfig $attributeMappingConfig,
+        private readonly ScopeConfigInterface $scopeConfig,
     ) {
         parent::__construct($objectManagerFactory, $stopwatch, $consoleOutput, $log);
     }
@@ -53,6 +57,14 @@ class ImportProductsXml extends ImportProfile
     {
         // Load all products from single XML file
         $items = $this->loadProducts();
+
+        // Get configured size attribute
+        $sizeAttribute = $this->scopeConfig->getValue(self::XML_PATH_SIZE_ATTRIBUTE);
+        if (empty($sizeAttribute)) {
+            throw new \Exception(
+                sprintf('Size attribute not configured; see config path %s', self::XML_PATH_SIZE_ATTRIBUTE),
+            );
+        }
 
         $skuResolver = function ($item) {
             // Check if this is a configurable parent marker
@@ -166,14 +178,6 @@ class ImportProductsXml extends ImportProfile
                 return null;
             },
             'revenue_group' => fn($item) => $this->getSpecValue($item, 'revenue_group'),
-            'maten' => function ($item) {
-                // Skip for configurable parents
-                if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
-                    return null;
-                }
-                $size = $item['ProductVariations']['ProductVariation']['Size'] ?? null;
-                return $size && !is_array($size) ? strtolower(trim($size)) : null;
-            },
             // Preserve internal fields for configurable building
             '_configurable_parent_sku' => function ($item) {
                 return $item['_configurable_parent_sku'] ?? null;
@@ -183,10 +187,20 @@ class ImportProductsXml extends ImportProfile
             },
         ];
 
+        // Add size attribute mapping (from Vendit Size field)
+        $mapping[$sizeAttribute] = function ($item) {
+            // Skip for configurable parents
+            if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
+                return null;
+            }
+            $size = $item['ProductVariations']['ProductVariation']['Size'] ?? null;
+            return $size && !is_array($size) ? strtolower(trim($size)) : null;
+        };
+
         // Add dynamically mapped attributes from config
         $attributeMappings = $this->attributeMappingConfig->getMappings();
         foreach ($attributeMappings as $specName => $attributeCode) {
-            // Skip if already mapped (like revenue_group)
+            // Skip if already mapped
             if (isset($mapping[$attributeCode])) {
                 continue;
             }
@@ -202,15 +216,15 @@ class ImportProductsXml extends ImportProfile
         $itemMapper->setItems($items);
         $itemMapper->process();
 
-        // Create attribute options for maten if they don't exist yet
+        // Create attribute options for size attribute if they don't exist yet
         $attributeOptionCreator = $this->attributeOptionCreatorFactory->create([
-            'attributes' => ['maten'],
+            'attributes' => [$sizeAttribute],
         ]);
         $attributeOptionCreator->setItems($items);
         $attributeOptionCreator->process();
 
         // Build configurable_variations field for configurable parents
-        $this->buildConfigurableVariations($items);
+        $this->buildConfigurableVariations($items, $sizeAttribute);
 
         // Save processed items for debugging (includes configurable_variations)
         $this->saveProcessedItems($items);
@@ -224,7 +238,7 @@ class ImportProductsXml extends ImportProfile
         return $items;
     }
 
-    public function buildConfigurableVariations(array &$items): void
+    public function buildConfigurableVariations(array &$items, string $sizeAttribute): void
     {
         $configurableGroups = [];
         foreach ($items as $sku => $item) {
@@ -260,10 +274,10 @@ class ImportProductsXml extends ImportProfile
                 $child = $items[$childSku];
                 $variationParts = ['sku=' . $childSku];
 
-                // Add the maten (size) attribute if it exists
+                // Add the size attribute if it exists
                 // Use the same value that was set in the child product (already normalized)
-                if (!empty($child['maten'])) {
-                    $variationParts[] = 'maten=' . $child['maten'];
+                if (!empty($child[$sizeAttribute])) {
+                    $variationParts[] = $sizeAttribute . '=' . $child[$sizeAttribute];
                 }
 
                 $variations[] = implode(',', $variationParts);
