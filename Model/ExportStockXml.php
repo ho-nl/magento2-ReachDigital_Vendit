@@ -124,7 +124,7 @@ class ExportStockXml
 
     public function getFilePath(): string
     {
-        return $this->venditConfig->getExportFilePath(Config::TYPE_STOCK);
+        return $this->venditConfig->getStockExportFilePath();
     }
 
     public function getMemoryUsage(): string

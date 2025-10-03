@@ -33,7 +33,7 @@ class ImportCustomersXml
 
     public function execute(): void
     {
-        $xmlFile = $this->config->getImportFilePath(Config::TYPE_CUSTOMER);
+        $xmlFile = $this->config->getCustomerImportFilePath();
 
         if (!file_exists($xmlFile)) {
             throw new \Exception(sprintf('Customer import XML file not found (%s)', $xmlFile));

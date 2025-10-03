@@ -21,16 +21,12 @@ use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem;
 use Magento\ImportExport\Model\Import;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
-use ReachDigital\Vendit\Model\Config\AttributeMappingConfig;
-use ReachDigital\Vendit\Model\Config\RequiredAttributesConfig;
 use ReachDigital\Vendit\Model\RowModifier\MultiSelectAttributeOptionCreatorFactory;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 class ImportProductsXml extends ImportProfile
 {
-    private const XML_PATH_SIZE_ATTRIBUTE = 'vendit/attribute_mapping/size_attribute';
-
     private array $attributeTypeCache = [];
 
     public function __construct(
@@ -43,9 +39,6 @@ class ImportProductsXml extends ImportProfile
         private readonly AttributeOptionCreatorFactory $attributeOptionCreatorFactory,
         private readonly Config $config,
         private readonly Filesystem $filesystem,
-        private readonly AttributeMappingConfig $attributeMappingConfig,
-        private readonly RequiredAttributesConfig $requiredAttributesConfig,
-        private readonly ScopeConfigInterface $scopeConfig,
         private readonly AttributeRepositoryInterface $attributeRepository,
     ) {
         parent::__construct($objectManagerFactory, $stopwatch, $consoleOutput, $log);
@@ -67,11 +60,9 @@ class ImportProductsXml extends ImportProfile
         $items = $this->loadProducts();
 
         // Get configured size attribute
-        $sizeAttribute = $this->scopeConfig->getValue(self::XML_PATH_SIZE_ATTRIBUTE);
+        $sizeAttribute = $this->config->getSizeAttribute();
         if (empty($sizeAttribute)) {
-            throw new \Exception(
-                sprintf('Size attribute not configured; see config path %s', self::XML_PATH_SIZE_ATTRIBUTE),
-            );
+            throw new \Exception('Size attribute not configured in Vendit configuration');
         }
 
         $skuResolver = function ($item) {
@@ -219,7 +210,7 @@ class ImportProductsXml extends ImportProfile
         };
 
         // Add dynamically mapped attributes from config
-        $attributeMapping = $this->attributeMappingConfig->getMapping();
+        $attributeMapping = $this->config->getAttributeMapping();
         foreach ($attributeMapping as $specName => $attributeCode) {
             // Skip if already mapped
             if (isset($mapping[$attributeCode])) {
@@ -336,7 +327,7 @@ class ImportProductsXml extends ImportProfile
 
     public function loadProducts(): array
     {
-        $xmlFilePath = $this->config->getImportFilePath(Config::TYPE_PRODUCT);
+        $xmlFilePath = $this->config->getProductImportFilePath();
         if (!file_exists($xmlFilePath)) {
             $this->log->error("Products XML file not found: {$xmlFilePath}");
             throw new \Exception("Products XML file not found: {$xmlFilePath}");
@@ -363,8 +354,8 @@ class ImportProductsXml extends ImportProfile
             }
 
             // Check if all required attributes (Magento attribute codes) exist in Specs
-            $requiredAttributeCodes = $this->requiredAttributesConfig->getRequiredAttributes();
-            $attributeMapping = $this->attributeMappingConfig->getMapping();
+            $requiredAttributeCodes = $this->config->getRequiredAttributes();
+            $attributeMapping = $this->config->getAttributeMapping();
             $missingRequired = false;
 
             foreach ($requiredAttributeCodes as $requiredAttributeCode) {
@@ -380,7 +371,9 @@ class ImportProductsXml extends ImportProfile
                 $specValue = $this->getSpecValue($productArray, $specName);
                 if (empty($specValue)) {
                     $productNumber = $productArray['ProductNumber'] ?? 'unknown';
-                    $this->log->error("Product {$productNumber} skipped: missing required attribute '{$requiredAttributeCode}' (spec: '{$specName}') in Specs");
+                    $this->log->error(
+                        "Product {$productNumber} skipped: missing required attribute '{$requiredAttributeCode}' (spec: '{$specName}') in Specs",
+                    );
                     $missingRequired = true;
                     break;
                 }

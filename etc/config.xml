@@ -16,6 +16,8 @@
                     <category_file>Groups.xml</category_file>
                     <customer_path>vendit/import/customers</customer_path>
                     <customer_file>Customers.xml</customer_file>
+                    <order_path>vendit/import/orders</order_path>
+                    <order_file>Orders.xml</order_file>
                 </import>
                 <export>
                     <product_path>vendit/export/products</product_path>
@@ -26,6 +28,8 @@
                     <category_file>Groups.xml</category_file>
                     <customer_path>vendit/export/customers</customer_path>
                     <customer_file>Customers.xml</customer_file>
+                    <order_path>vendit/export/orders</order_path>
+                    <order_file>Orders.xml</order_file>
                 </export>
             </directory_mapping>
         </vendit>

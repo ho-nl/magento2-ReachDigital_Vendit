@@ -11,15 +11,22 @@ namespace ReachDigital\Vendit\Model;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Io\File as IoFile;
+use Magento\Framework\Serialize\SerializerInterface;
 
 class Config
 {
     const DIR_MAPPING_CONFIG_PATH = 'vendit/directory_mapping';
 
-    const TYPE_PRODUCT = 'product';
+    const XML_PATH_ATTRIBUTE_MAPPING = 'vendit/attribute_mapping/attributes';
+    const XML_PATH_REQUIRED_ATTRIBUTES = 'vendit/attribute_mapping/required_attributes';
+    const XML_PATH_SIZE_ATTRIBUTE = 'vendit/attribute_mapping/size_attribute';
+    const XML_PATH_BARCODE_ATTRIBUTE = 'vendit/attribute_mapping/barcode_attribute';
+
     const TYPE_CATEGORY = 'category';
-    const TYPE_STOCK = 'stock';
     const TYPE_CUSTOMER = 'customer';
+    const TYPE_ORDER = 'order';
+    const TYPE_PRODUCT = 'product';
+    const TYPE_STOCK = 'stock';
 
     const EXPORT = 'export';
     const IMPORT = 'import';
@@ -28,17 +35,58 @@ class Config
         private readonly DirectoryList $directoryList,
         private readonly IoFile $ioFile,
         private readonly ScopeConfigInterface $scopeConfig,
+        private readonly SerializerInterface $serializer,
     ) {
     }
 
-    public function getImportFilePath($entityType): string
+    public function getCategoryImportFilePath(): string
     {
-        return $this->getFilePath($entityType, self::IMPORT);
+        return $this->getFilePath(self::TYPE_CATEGORY, self::IMPORT);
     }
 
-    public function getExportFilePath(string $entityType): string
+    public function getCategoryExportFilePath(): string
     {
-        return $this->getFilePath($entityType, self::EXPORT);
+        return $this->getFilePath(self::TYPE_CATEGORY, self::EXPORT);
+    }
+
+    public function getCustomerImportFilePath(): string
+    {
+        return $this->getFilePath(self::TYPE_CUSTOMER, self::IMPORT);
+    }
+
+    public function getCustomerExportFilePath(): string
+    {
+        return $this->getFilePath(self::TYPE_CUSTOMER, self::EXPORT);
+    }
+
+    public function getOrderImportFilePath(): string
+    {
+        return $this->getFilePath(self::TYPE_ORDER, self::IMPORT);
+    }
+
+    public function getOrderExportFilePath(): string
+    {
+        return $this->getFilePath(self::TYPE_ORDER, self::EXPORT);
+    }
+
+    public function getProductImportFilePath(): string
+    {
+        return $this->getFilePath(self::TYPE_PRODUCT, self::IMPORT);
+    }
+
+    public function getProductExportFilePath(): string
+    {
+        return $this->getFilePath(self::TYPE_PRODUCT, self::EXPORT);
+    }
+
+    public function getStockImportFilePath(): string
+    {
+        return $this->getFilePath(self::TYPE_STOCK, self::IMPORT);
+    }
+
+    public function getStockExportFilePath(): string
+    {
+        return $this->getFilePath(self::TYPE_STOCK, self::EXPORT);
     }
 
     protected function getFilePath(string $entityType, string $type): string
@@ -59,5 +107,84 @@ class Config
         }
 
         return $directory . DIRECTORY_SEPARATOR . $filename;
+    }
+
+    /**
+     * Get attribute mapping (spec name => attribute code)
+     */
+    public function getAttributeMapping(): array
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_ATTRIBUTE_MAPPING);
+
+        if (!$value) {
+            return [];
+        }
+
+        try {
+            $mapping = $this->serializer->unserialize($value);
+
+            if (!is_array($mapping)) {
+                return [];
+            }
+
+            // Convert to spec_name => attribute_code format
+            $result = [];
+            foreach ($mapping as $attribute) {
+                if (
+                    isset($attribute['spec_name']) &&
+                    isset($attribute['attribute_code']) &&
+                    !empty($attribute['spec_name']) &&
+                    !empty($attribute['attribute_code'])
+                ) {
+                    $result[$attribute['spec_name']] = $attribute['attribute_code'];
+                }
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    public function isMapped(string $specName): bool
+    {
+        $mapping = $this->getAttributeMapping();
+        return isset($mapping[$specName]);
+    }
+
+    public function getAttributeCode(string $specName): ?string
+    {
+        $mapping = $this->getAttributeMapping();
+        return $mapping[$specName] ?? null;
+    }
+
+    public function getRequiredAttributes(): array
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_REQUIRED_ATTRIBUTES);
+
+        if (!$value) {
+            return [];
+        }
+
+        // Split by comma and trim whitespace
+        $attributes = array_map('trim', explode(',', $value));
+
+        // Remove empty values
+        return array_filter($attributes);
+    }
+
+    public function isRequired(string $attributeCode): bool
+    {
+        return in_array($attributeCode, $this->getRequiredAttributes(), true);
+    }
+
+    public function getSizeAttribute(): ?string
+    {
+        return $this->scopeConfig->getValue(self::XML_PATH_SIZE_ATTRIBUTE);
+    }
+
+    public function getBarcodeAttribute(): ?string
+    {
+        return $this->scopeConfig->getValue(self::XML_PATH_BARCODE_ATTRIBUTE);
     }
 }

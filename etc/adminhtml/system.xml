@@ -15,7 +15,7 @@
             <group id="attribute_mapping" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Product Attribute Mapping</label>
                 <comment><![CDATA[Map Vendit Specs to Magento product attributes. Spec names are case-sensitive.]]></comment>
-                <field id="size_attribute" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                <field id="size_attribute" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Size Attribute</label>
                     <comment><![CDATA[Select which product attribute to use for configurable product size variations (maps to Vendit 'Size' field).]]></comment>
                     <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
@@ -63,34 +63,46 @@
                     <field id="customer_file" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Customers File</label>
                     </field>
+                    <field id="order_path" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Order Updates File Path</label>
+                    </field>
+                    <field id="order_file" translate="label" type="text" sortOrder="55" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Order Updates File</label>
+                    </field>
                 </group>
                 <group id="export" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Export</label>
                     <field id="product_path" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Products</label>
+                        <label>Products File Path</label>
                     </field>
                     <field id="product_file" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Products</label>
+                        <label>Products File</label>
                     </field>
                     <field id="stock_path" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Stock</label>
+                        <label>Stock File Path</label>
                     </field>
                     <field id="stock_file" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Stock</label>
+                        <label>Stock File</label>
                     </field>
                     <field id="category_path" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Categories</label>
+                        <label>Categories File Path</label>
                         <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
                     </field>
                     <field id="category_file" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Categories</label>
+                        <label>Categories File</label>
                         <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
                     </field>
                     <field id="customer_path" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Customers</label>
+                        <label>Customers File Path</label>
                     </field>
                     <field id="customer_file" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Customers</label>
+                        <label>Customers File</label>
+                    </field>
+                    <field id="order_path" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Orders File Path</label>
+                    </field>
+                    <field id="order_file" translate="label" type="text" sortOrder="55" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Orders File</label>
                     </field>
                 </group>
             </group>

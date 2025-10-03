@@ -76,12 +76,23 @@ class ExportOrdersXml
         $orderNode->appendChild($doc->createElement('StoreNumber', $order->getStoreId()));
         $orderNode->appendChild($doc->createElement('OrderType', 'Order'));
         $orderNode->appendChild($doc->createElement('OrderDate', $order->getCreatedAt()));
-        $orderNode->appendChild($doc->createElement('TotalOrderAmount', number_format((float) $order->getGrandTotal(), 4, '.', '')));
-        $orderNode->appendChild($doc->createElement('PaymentMethod', $order->getPayment() ? $order->getPayment()->getMethod() : ''));
+        $orderNode->appendChild(
+            $doc->createElement('TotalOrderAmount', number_format((float) $order->getGrandTotal(), 4, '.', '')),
+        );
+        $orderNode->appendChild(
+            $doc->createElement('PaymentMethod', $order->getPayment() ? $order->getPayment()->getMethod() : ''),
+        );
         $orderNode->appendChild($doc->createElement('Paid', number_format((float) $order->getTotalPaid(), 4, '.', '')));
         $orderNode->appendChild($doc->createElement('ShippingMethod', $order->getShippingDescription()));
-        $orderNode->appendChild($doc->createElement('ShippingCosts', number_format((float) $order->getShippingInclTax(), 4, '.', '')));
-        $orderNode->appendChild($doc->createElement('InvoiceDiscountAmount', number_format((float) $order->getDiscountAmount(), 4, '.', '')));
+        $orderNode->appendChild(
+            $doc->createElement('ShippingCosts', number_format((float) $order->getShippingInclTax(), 4, '.', '')),
+        );
+        $orderNode->appendChild(
+            $doc->createElement(
+                'InvoiceDiscountAmount',
+                number_format((float) $order->getDiscountAmount(), 4, '.', ''),
+            ),
+        );
 
         // Invoice (billing) address
         $billing = $order->getBillingAddress();
@@ -92,7 +103,9 @@ class ExportOrdersXml
             $orderNode->appendChild($doc->createElement('Phone', $billing->getTelephone()));
             $orderNode->appendChild($doc->createElement('InvoiceAddress', $billing->getStreetLine(1)));
             $orderNode->appendChild($doc->createElement('InvoiceHousenumber', $billing->getStreetLine(2) ?: ''));
-            $orderNode->appendChild($doc->createElement('InvoiceHousenumberExtension', $billing->getStreetLine(3) ?: ''));
+            $orderNode->appendChild(
+                $doc->createElement('InvoiceHousenumberExtension', $billing->getStreetLine(3) ?: ''),
+            );
             $orderNode->appendChild($doc->createElement('InvoiceZipcode', $billing->getPostcode()));
             $orderNode->appendChild($doc->createElement('InvoiceCity', $billing->getCity()));
             $orderNode->appendChild($doc->createElement('InvoiceCountry', $billing->getCountryId())); // @todo country full name
@@ -111,7 +124,9 @@ class ExportOrdersXml
             $orderNode->appendChild($doc->createElement('DeliveryLastName', $shipping->getLastname() ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryAddress', $shipping->getStreetLine(1) ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryHousenumber', $shipping->getStreetLine(2) ?: ''));
-            $orderNode->appendChild($doc->createElement('DeliveryHousenumberExtension', $shipping->getStreetLine(3) ?: ''));
+            $orderNode->appendChild(
+                $doc->createElement('DeliveryHousenumberExtension', $shipping->getStreetLine(3) ?: ''),
+            );
             $orderNode->appendChild($doc->createElement('DeliveryZipcode', $shipping->getPostcode() ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryCity', $shipping->getCity() ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryCountry', $shipping->getCountryId() ?: ''));
@@ -125,8 +140,12 @@ class ExportOrdersXml
             $productNode->appendChild($doc->createElement('Sku', $item->getSku()));
             $productNode->appendChild($doc->createElement('Name', htmlentities($item->getName())));
             $productNode->appendChild($doc->createElement('Qty', $item->getQtyOrdered()));
-            $productNode->appendChild($doc->createElement('Price', number_format((float)$item->getPriceInclTax(), 4, '.', '')));
-            $productNode->appendChild($doc->createElement('RowTotal', number_format((float)$item->getRowTotalInclTax(), 4, '.', '')));
+            $productNode->appendChild(
+                $doc->createElement('Price', number_format((float) $item->getPriceInclTax(), 4, '.', '')),
+            );
+            $productNode->appendChild(
+                $doc->createElement('RowTotal', number_format((float) $item->getRowTotalInclTax(), 4, '.', '')),
+            );
             $productsNode->appendChild($productNode);
         }
         $orderNode->appendChild($productsNode);
@@ -137,6 +156,6 @@ class ExportOrdersXml
 
     public function getFilePath(): string
     {
-        return $this->venditConfig->getExportFilePath(Config::TYPE_PRODUCT);
+        return $this->venditConfig->getOrderExportFilePath();
     }
 }
