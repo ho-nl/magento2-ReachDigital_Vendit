@@ -17,6 +17,7 @@
                 <item name="product_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportProducts</item>
                 <!-- Utility Commands -->
                 <item name="trim_attribute_options" xsi:type="object">ReachDigital\Vendit\Console\Command\TrimAttributeOptions</item>
+                <item name="lowercase_attribute_codes" xsi:type="object">ReachDigital\Vendit\Console\Command\LowercaseAttributeCodes</item>
             </argument>
         </arguments>
     </type>
