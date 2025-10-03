@@ -8,22 +8,15 @@ declare(strict_types=1);
 
 namespace ReachDigital\Vendit\Block\Adminhtml\Form\Field;
 
-use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
-use Magento\Framework\Api\FilterBuilder;
-use Magento\Framework\Api\Search\FilterGroupBuilder;
-use Magento\Framework\Api\SearchCriteriaBuilder;
-use Magento\Framework\Api\SortOrderBuilder;
+use Magento\Framework\View\Element\Context;
 use Magento\Framework\View\Element\Html\Select;
+use ReachDigital\Vendit\Model\Config\Source\ProductAttributes;
 
 class ProductAttributeColumn extends Select
 {
     public function __construct(
-        \Magento\Framework\View\Element\Context $context,
-        private readonly ProductAttributeRepositoryInterface $attributeRepository,
-        private readonly SearchCriteriaBuilder $searchCriteriaBuilder,
-        private readonly SortOrderBuilder $sortOrderBuilder,
-        private readonly FilterGroupBuilder $filterGroupBuilder,
-        private readonly FilterBuilder $filterBuilder,
+        Context $context,
+        public readonly ProductAttributes $productAttributes,
         array $data = [],
     ) {
         parent::__construct($context, $data);
@@ -42,48 +35,9 @@ class ProductAttributeColumn extends Select
     public function _toHtml(): string
     {
         if (!$this->getOptions()) {
-            $this->setOptions($this->getSourceOptions());
+            $this->setOptions($this->productAttributes->toOptionArray());
         }
 
         return parent::_toHtml();
-    }
-
-    public function getSourceOptions(): array
-    {
-        $staticFilter = $this->filterBuilder
-            ->setField('backend_type')
-            ->setConditionType('neq')
-            ->setValue('static')
-            ->create();
-        $staticFilterGroup = $this->filterGroupBuilder->create()->setFilters([$staticFilter]);
-        $sortOrder = $this->sortOrderBuilder
-            ->setField('frontend_label')
-            ->setDirection(\Laminas\Db\Sql\Select::ORDER_ASCENDING)
-            ->create();
-
-        $searchCriteria = $this->searchCriteriaBuilder
-            ->create()
-            ->setSortOrders([$sortOrder])
-            ->setFilterGroups([$staticFilterGroup]);
-        $attributes = $this->attributeRepository->getList($searchCriteria)->getItems();
-
-        $options = [
-            [
-                'label' => __('-- Please Select --'),
-                'value' => '',
-            ],
-        ];
-        foreach ($attributes as $attribute) {
-            if (!$attribute->getDefaultFrontendLabel()) {
-                continue;
-            }
-
-            $options[] = [
-                'value' => $attribute->getAttributeCode(),
-                'label' => sprintf('%s (%s)', $attribute->getDefaultFrontendLabel(), $attribute->getAttributeCode()),
-            ];
-        }
-
-        return $options;
     }
 }
