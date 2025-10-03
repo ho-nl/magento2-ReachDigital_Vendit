@@ -12,6 +12,7 @@ use Ho\Import\Logger\Log;
 use Ho\Import\Model\ImportProfile;
 use Ho\Import\RowModifier\ItemMapperFactory;
 use Magento\Catalog\Model\Product;
+use Magento\Eav\Api\AttributeRepositoryInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
@@ -28,6 +29,9 @@ class ImportProductsXml extends ImportProfile
 {
     private const XML_PATH_SIZE_ATTRIBUTE = 'vendit/attribute_mapping/size_attribute';
 
+    private array $booleanAttributeCache = [];
+    private array $multiselectAttributeCache = [];
+
     public function __construct(
         ObjectManagerFactory $objectManagerFactory,
         Stopwatch $stopwatch,
@@ -39,6 +43,7 @@ class ImportProductsXml extends ImportProfile
         private readonly Filesystem $filesystem,
         private readonly AttributeMappingConfig $attributeMappingConfig,
         private readonly ScopeConfigInterface $scopeConfig,
+        private readonly AttributeRepositoryInterface $attributeRepository,
     ) {
         parent::__construct($objectManagerFactory, $stopwatch, $consoleOutput, $log);
     }
@@ -230,9 +235,18 @@ class ImportProductsXml extends ImportProfile
         $itemMapper->setItems($items);
         $itemMapper->process();
 
-        // Create attribute options for size attribute if they don't exist yet
+        // Collect all select/multiselect attributes that need option creation
+        $attributesForOptionCreation = [$sizeAttribute];
+        foreach ($attributeMapping as $specName => $attributeCode) {
+            if ($this->isSelectOrMultiselectAttribute($attributeCode)) {
+                $attributesForOptionCreation[] = $attributeCode;
+            }
+        }
+        $attributesForOptionCreation = array_unique($attributesForOptionCreation);
+
+        // Create attribute options if they don't exist yet
         $attributeOptionCreator = $this->attributeOptionCreatorFactory->create([
-            'attributes' => [$sizeAttribute],
+            'attributes' => $attributesForOptionCreation,
         ]);
         $attributeOptionCreator->setItems($items);
         $attributeOptionCreator->process();
@@ -432,10 +446,81 @@ class ImportProductsXml extends ImportProfile
 
         foreach ($specs as $spec) {
             if (isset($spec['Name']) && $spec['Name'] === $specName) {
-                return (string) $spec['Value'];
+                $value = (string) $spec['Value'];
+
+                // Get the Magento attribute code for this spec
+                $attributeCode = $this->getAttributeCodeForSpec($specName);
+
+                if ($attributeCode && $this->isBooleanAttribute($attributeCode)) {
+                    // Translate boolean values from English to Dutch
+                    return $value === 'Yes' ? 'Ja' : 'Nee';
+                }
+
+                if ($attributeCode && $this->isMultiselectAttribute($attributeCode)) {
+                    // For multiselect attributes, make sure there is no whitespace around comma's
+                    return implode(',', array_map('trim', explode(',', $value)));
+                }
+
+                return $value;
             }
         }
 
         return null;
+    }
+
+    private function getAttributeCodeForSpec(string $specName): ?string
+    {
+        $attributeMapping = $this->attributeMappingConfig->getMapping();
+        return $attributeMapping[$specName] ?? null;
+    }
+
+    private function isBooleanAttribute(string $attributeCode): bool
+    {
+        // Check cache first
+        if (isset($this->booleanAttributeCache[$attributeCode])) {
+            return $this->booleanAttributeCache[$attributeCode];
+        }
+
+        try {
+            $attribute = $this->attributeRepository->get(Product::ENTITY, $attributeCode);
+            $isBoolean = $attribute->getFrontendInput() === 'boolean';
+            $this->booleanAttributeCache[$attributeCode] = $isBoolean;
+            return $isBoolean;
+        } catch (\Exception $e) {
+            // Attribute doesn't exist or error occurred
+            $this->booleanAttributeCache[$attributeCode] = false;
+            return false;
+        }
+    }
+
+    private function isMultiselectAttribute(string $attributeCode): bool
+    {
+        // Check cache first
+        if (isset($this->multiselectAttributeCache[$attributeCode])) {
+            return $this->multiselectAttributeCache[$attributeCode];
+        }
+
+        try {
+            $attribute = $this->attributeRepository->get(Product::ENTITY, $attributeCode);
+            $isMultiselect = $attribute->getFrontendInput() === 'multiselect';
+            $this->multiselectAttributeCache[$attributeCode] = $isMultiselect;
+            return $isMultiselect;
+        } catch (\Exception $e) {
+            // Attribute doesn't exist or error occurred
+            $this->multiselectAttributeCache[$attributeCode] = false;
+            return false;
+        }
+    }
+
+    private function isSelectOrMultiselectAttribute(string $attributeCode): bool
+    {
+        try {
+            $attribute = $this->attributeRepository->get(Product::ENTITY, $attributeCode);
+            $frontendInput = $attribute->getFrontendInput();
+            return in_array($frontendInput, ['select', 'multiselect'], true);
+        } catch (\Exception $e) {
+            // Attribute doesn't exist or error occurred
+            return false;
+        }
     }
 }
