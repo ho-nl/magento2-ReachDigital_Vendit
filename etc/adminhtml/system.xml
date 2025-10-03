@@ -16,7 +16,7 @@
                 <label>Product Attribute Mapping</label>
                 <comment><![CDATA[Map Vendit Specs to Magento product attributes. Spec names are case-sensitive.]]></comment>
                 <field id="size_attribute" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                    <label>Size Attribute (Configurable Variation)</label>
+                    <label>Size Attribute</label>
                     <comment><![CDATA[Select which product attribute to use for configurable product size variations (maps to Vendit 'Size' field).]]></comment>
                     <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
                 </field>
@@ -24,6 +24,12 @@
                     <label>Attribute Mapping</label>
                     <frontend_model>ReachDigital\Vendit\Block\Adminhtml\Form\Field\AttributeMapping</frontend_model>
                     <backend_model>ReachDigital\Vendit\Model\Config\Backend\AttributeMapping</backend_model>
+                </field>
+                <field id="required_attributes" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Required Attributes</label>
+                    <comment><![CDATA[Comma-separated list of Magento attribute codes (e.g., revenue_group, brand2, leverancier).
+                    Products will be skipped during import if any of these attributes have empty values.
+                    This prevents the import from failing when the supplied data is incomplete.]]></comment>
                 </field>
             </group>
             <group id="directory_mapping" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">

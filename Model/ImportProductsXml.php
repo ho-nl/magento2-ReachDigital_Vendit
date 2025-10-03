@@ -22,6 +22,7 @@ use Magento\Framework\Filesystem;
 use Magento\ImportExport\Model\Import;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
 use ReachDigital\Vendit\Model\Config\AttributeMappingConfig;
+use ReachDigital\Vendit\Model\Config\RequiredAttributesConfig;
 use ReachDigital\Vendit\Model\RowModifier\MultiSelectAttributeOptionCreatorFactory;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -43,6 +44,7 @@ class ImportProductsXml extends ImportProfile
         private readonly Config $config,
         private readonly Filesystem $filesystem,
         private readonly AttributeMappingConfig $attributeMappingConfig,
+        private readonly RequiredAttributesConfig $requiredAttributesConfig,
         private readonly ScopeConfigInterface $scopeConfig,
         private readonly AttributeRepositoryInterface $attributeRepository,
     ) {
@@ -360,11 +362,31 @@ class ImportProductsXml extends ImportProfile
                 continue;
             }
 
-            // @todo make attribute(s) configuration, remove all revenue_group references
-            // Check if revenue_group exists in Specs
-            if (!$this->getSpecValue($productArray, 'revenue_group')) {
-                $productNumber = $productArray['ProductNumber'] ?? 'unknown';
-                $this->log->error("Product {$productNumber} skipped: missing revenue_group in Specs");
+            // Check if all required attributes (Magento attribute codes) exist in Specs
+            $requiredAttributeCodes = $this->requiredAttributesConfig->getRequiredAttributes();
+            $attributeMapping = $this->attributeMappingConfig->getMapping();
+            $missingRequired = false;
+
+            foreach ($requiredAttributeCodes as $requiredAttributeCode) {
+                // Find the spec name for this attribute code
+                $specName = array_search($requiredAttributeCode, $attributeMapping, true);
+
+                if ($specName === false) {
+                    // Attribute not in mapping, skip check
+                    continue;
+                }
+
+                // Check if spec value exists and is not empty
+                $specValue = $this->getSpecValue($productArray, $specName);
+                if (empty($specValue)) {
+                    $productNumber = $productArray['ProductNumber'] ?? 'unknown';
+                    $this->log->error("Product {$productNumber} skipped: missing required attribute '{$requiredAttributeCode}' (spec: '{$specName}') in Specs");
+                    $missingRequired = true;
+                    break;
+                }
+            }
+
+            if ($missingRequired) {
                 continue;
             }
 
