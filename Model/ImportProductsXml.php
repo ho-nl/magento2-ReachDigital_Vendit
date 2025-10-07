@@ -14,7 +14,6 @@ use Ho\Import\RowModifier\AttributeOptionCreatorFactory;
 use Ho\Import\RowModifier\ItemMapperFactory;
 use Magento\Catalog\Model\Product;
 use Magento\Eav\Api\AttributeRepositoryInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
 use Magento\Framework\Exception\FileSystemException;
@@ -499,7 +498,7 @@ class ImportProductsXml extends ImportProfile
 
     private function getAttributeCodeForSpec(string $specName): ?string
     {
-        $attributeMapping = $this->attributeMappingConfig->getMapping();
+        $attributeMapping = $this->config->getAttributeMapping();
         return $attributeMapping[$specName] ?? null;
     }
 
