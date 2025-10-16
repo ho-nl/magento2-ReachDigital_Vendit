@@ -44,11 +44,6 @@ class Config
         return $this->getFilePath(self::TYPE_CATEGORY, self::IMPORT);
     }
 
-    public function getCategoryExportFilePath(): string
-    {
-        return $this->getFilePath(self::TYPE_CATEGORY, self::EXPORT);
-    }
-
     public function getCustomerImportFilePath(): string
     {
         return $this->getFilePath(self::TYPE_CUSTOMER, self::IMPORT);
@@ -74,19 +69,9 @@ class Config
         return $this->getFilePath(self::TYPE_PRODUCT, self::IMPORT);
     }
 
-    public function getProductExportFilePath(): string
-    {
-        return $this->getFilePath(self::TYPE_PRODUCT, self::EXPORT);
-    }
-
     public function getStockImportFilePath(): string
     {
         return $this->getFilePath(self::TYPE_STOCK, self::IMPORT);
-    }
-
-    public function getStockExportFilePath(): string
-    {
-        return $this->getFilePath(self::TYPE_STOCK, self::EXPORT);
     }
 
     protected function getFilePath(string $entityType, string $type): string

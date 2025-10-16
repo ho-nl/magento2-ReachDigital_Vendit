@@ -80,26 +80,6 @@
                 </group>
                 <group id="export" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Export</label>
-                    <field id="product_path" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Products File Path</label>
-                    </field>
-                    <field id="product_file" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Products File</label>
-                    </field>
-                    <field id="stock_path" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Stock File Path</label>
-                    </field>
-                    <field id="stock_file" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Stock File</label>
-                    </field>
-                    <field id="category_path" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Categories File Path</label>
-                        <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
-                    </field>
-                    <field id="category_file" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Categories File</label>
-                        <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
-                    </field>
                     <field id="customer_path" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Customers File Path</label>
                     </field>
@@ -113,38 +93,6 @@
                         <label>Orders File</label>
                     </field>
                 </group>
-            </group>
-        </section>
-        <section id="vendit_export" translate="label" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
-            <label>Manual Export</label>
-            <tab>vendit</tab>
-            <resource>ReachDigital_Vendit::config</resource>
-            <group id="export" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Manual Export</label>
-                <field id="manual_category_export" translate="label" type="button" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Manual Category Export</label>
-                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\CategoryExportButton</frontend_model>
-                </field>
-                <field id="last_category_export" translate="label" type="label" sortOrder="20" showInDefault="1">
-                    <label>Last Category Export</label>
-                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\CategoryExportInfo</frontend_model>
-                </field>
-                <field id="manual_product_export" translate="label" type="button" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Manual Product Export</label>
-                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\ProductExportButton</frontend_model>
-                </field>
-                <field id="last_product_export" translate="label" type="label" sortOrder="40" showInDefault="1">
-                    <label>Last Product Export</label>
-                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\ProductExportInfo</frontend_model>
-                </field>
-                <field id="manual_stock_export" translate="label" type="button" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Manual Stock Export</label>
-                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\StockExportButton</frontend_model>
-                </field>
-                <field id="last_stock_export" translate="label" type="label" sortOrder="60" showInDefault="1">
-                    <label>Last Stock Export</label>
-                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\StockExportInfo</frontend_model>
-                </field>
             </group>
         </section>
     </system>

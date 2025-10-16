@@ -20,12 +20,6 @@
                     <order_file>Orders.xml</order_file>
                 </import>
                 <export>
-                    <product_path>vendit/export/products</product_path>
-                    <product_file>Products.xml</product_file>
-                    <stock_path>vendit/export/stock</stock_path>
-                    <stock_file>Stock.xml</stock_file>
-                    <category_path>vendit/export/categories</category_path>
-                    <category_file>Groups.xml</category_file>
                     <customer_path>vendit/export/customers</customer_path>
                     <customer_file>Customers.xml</customer_file>
                     <order_path>vendit/export/orders</order_path>
