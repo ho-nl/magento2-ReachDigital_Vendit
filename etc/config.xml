@@ -21,7 +21,7 @@
                 </import>
                 <export>
                     <customer_path>vendit/export/customers</customer_path>
-                    <customer_file>Customers.xml</customer_file>
+                    <customer_file>Customer_%s.xml</customer_file>
                     <order_path>vendit/export/orders</order_path>
                     <order_file>Orders.xml</order_file>
                 </export>
