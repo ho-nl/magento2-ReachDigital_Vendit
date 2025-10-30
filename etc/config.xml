@@ -23,7 +23,7 @@
                     <customer_path>vendit/export/customers</customer_path>
                     <customer_file>Customer_%s.xml</customer_file>
                     <order_path>vendit/export/orders</order_path>
-                    <order_file>Orders.xml</order_file>
+                    <order_file>Order_%s.xml</order_file>
                 </export>
             </directory_mapping>
         </vendit>

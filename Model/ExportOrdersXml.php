@@ -26,6 +26,33 @@ class ExportOrdersXml
 
     public function execute(): int
     {
+        // Get increment IDs of already exported orders
+        $exportedOrderIds = $this->exportedOrderResource->getAllExportedOrderIds();
+
+        $searchCriteriaBuilder = $this->searchCriteriaBuilder->addFilter('status', 'processing');
+        if (!empty($exportedOrderIds)) {
+            $searchCriteriaBuilder->addFilter('increment_id', $exportedOrderIds, 'nin');
+        }
+        $orderRepository = $this->orderRepository->getList($searchCriteriaBuilder->create());
+
+        $exportTimestamp = $this->dateTime->gmtDate(DATE_ATOM);
+        $i = 0;
+
+        foreach ($orderRepository->getItems() as $order) {
+            // Create separate XML file for each order
+            $this->exportSingleOrder($order, $exportTimestamp);
+
+            // Mark order as exported
+            $this->exportedOrderResource->markOrderAsExported((string) $order->getIncrementId());
+
+            $i++;
+        }
+
+        return $i;
+    }
+
+    private function exportSingleOrder($order, string $exportTimestamp): void
+    {
         $doc = new \DOMDocument('1.0', 'utf-16');
         $doc->formatOutput = true;
 
@@ -36,34 +63,24 @@ class ExportOrdersXml
 
         $info = $doc->createElement('ImportInfo');
         $orderImport->appendChild($info);
-        $info->appendChild($doc->createElement('ExportDateTime', $this->dateTime->gmtDate(DATE_ATOM)));
+        $info->appendChild($doc->createElement('ExportDateTime', $exportTimestamp));
 
         $orders = $doc->createElement('Orders');
         $orderImport->appendChild($orders);
 
-        // Get increment IDs of already exported orders
-        $exportedOrderIds = $this->exportedOrderResource->getAllExportedOrderIds();
+        // Export order as XML
+        $this->addOrderToXml($doc, $orders, $order);
 
-        $searchCriteriaBuilder = $this->searchCriteriaBuilder->addFilter('status', 'processing');
-        if (!empty($exportedOrderIds)) {
-            $searchCriteriaBuilder->addFilter('increment_id', $exportedOrderIds, 'nin');
-        }
-        $orderRepository = $this->orderRepository->getList($searchCriteriaBuilder->create());
+        // Generate filename with order increment ID and timestamp
+        $filename = $this->generateFilename($order, $exportTimestamp);
+        $filePath = $this->getExportDirectory() . DIRECTORY_SEPARATOR . $filename;
 
-        $i = 0;
-        foreach ($orderRepository->getItems() as $order) {
-            // Export order as XML
-            $this->addOrderToXml($doc, $orders, $order);
-
-            // Mark order as exported
-            $this->exportedOrderResource->markOrderAsExported((string) $order->getIncrementId());
-
-            $i++;
-        }
-
-        $doc->save($this->getFilePath());
-
-        return $i;
+        // Save and convert 2-space indentation to 4-space
+        $xml = $doc->saveXML();
+        $xml = preg_replace_callback('/^( +)/m', function ($matches) {
+            return str_repeat(' ', strlen($matches[1]) * 2);
+        }, $xml);
+        file_put_contents($filePath, $xml);
     }
 
     public function addOrderToXml(\DOMDocument $doc, \DOMElement $parentNode, $order): void
@@ -154,8 +171,31 @@ class ExportOrdersXml
         // $orderNode->appendChild($doc->createElement('CustomerNumber', ''));
     }
 
-    public function getFilePath(): string
+    private function generateFilename($order, string $exportTimestamp): string
     {
-        return $this->venditConfig->getOrderExportFilePath();
+        // Get order increment ID and sanitize it
+        $orderIncrementId = preg_replace('/[^a-zA-Z0-9_-]/', '_', (string) $order->getIncrementId());
+
+        // Format timestamp for filename (YmdHis format)
+        try {
+            $timestamp = (new \DateTime($exportTimestamp))->format('YmdHis');
+        } catch (\Exception $e) {
+            $timestamp = date('YmdHis');
+        }
+
+        // Get filename template from config (e.g., "Order_%s.xml")
+        $filenameTemplate = basename($this->venditConfig->getOrderExportFilePath());
+
+        // Replace %s placeholders with order increment ID and timestamp
+        // Example: Order_123456_20250130120000.xml
+        $replacement = $orderIncrementId . '_' . $timestamp;
+
+        return sprintf($filenameTemplate, $replacement);
+    }
+
+    private function getExportDirectory(): string
+    {
+        $filePath = $this->venditConfig->getOrderExportFilePath();
+        return dirname($filePath);
     }
 }

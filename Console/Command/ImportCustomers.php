@@ -17,17 +17,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ImportCustomers extends Command
 {
-    public function __construct(
-        private readonly ImportCustomersXml $importer,
-        private readonly State $state
-    ) {
+    public function __construct(private readonly ImportCustomersXml $importer, private readonly State $state)
+    {
         parent::__construct();
     }
 
     protected function configure(): void
     {
         $this->setName('vendit:import:customers')->setDescription(
-            'Import all customers from XML file supplied by Vendit'
+            'Import all customers from XML file supplied by Vendit',
         );
 
         parent::configure();

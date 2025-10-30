@@ -13,11 +13,15 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use ReachDigital\Vendit\Model\ExportOrdersXml;
+use ReachDigital\Vendit\Model\Config;
 
 class ExportOrders extends Command
 {
-    public function __construct(public ExportOrdersXml $exporter, string $name = null)
-    {
+    public function __construct(
+        public ExportOrdersXml $exporter,
+        private readonly Config $config,
+        string $name = null
+    ) {
         parent::__construct($name);
     }
 
@@ -33,15 +37,19 @@ class ExportOrders extends Command
         try {
             $exported = $this->exporter->execute();
 
-            $output->writeln(
-                $exported
-                    ? sprintf(
-                        '<info>Successfully exported %s order(s) to %s</info>',
+            if ($exported) {
+                $directory = dirname($this->config->getOrderExportFilePath());
+                $output->writeln(
+                    sprintf(
+                        '<info>Successfully exported %s order(s) to separate XML files in %s</info>',
                         $exported,
-                        $this->exporter->getFilePath()
+                        $directory
                     )
-                    : '<info>No orders found to be exported.</info>'
-            );
+                );
+            } else {
+                $output->writeln('<info>No orders found to be exported.</info>');
+            }
+
             return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {
             $output->writeln('<error>Error: ' . $e->getMessage() . '</error>');

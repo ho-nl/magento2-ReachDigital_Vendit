@@ -93,6 +93,8 @@
                     </field>
                     <field id="order_file" translate="label" type="text" sortOrder="55" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Orders File</label>
+                        <comment><![CDATA[Where <code>%s</code> is the timestamp and/or order number.<br/>
+                        For example: Order_%s.xml]]></comment>
                     </field>
                 </group>
             </group>
