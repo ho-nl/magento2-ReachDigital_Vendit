@@ -12,46 +12,12 @@
             <label>General Configuration</label>
             <tab>vendit</tab>
             <resource>ReachDigital_Vendit::config</resource>
-            <group id="attribute_mapping" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Product Attribute Mapping</label>
-                <comment><![CDATA[Map Vendit Specs to Magento product attributes. Spec names are case-sensitive.]]></comment>
-                <field id="size_attribute" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Size Attribute</label>
-                    <comment><![CDATA[Select which product attribute to use for configurable product size variations (maps to Vendit 'Size' field).]]></comment>
-                    <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
-                    <validate>required</validate>
-                </field>
-                <field id="barcode_attribute" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Barcode Attribute</label>
-                    <comment><![CDATA[Select which product attribute to use for matching Vendit barcodes for the stock import.]]></comment>
-                    <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
-                    <validate>required</validate>
-                </field>
-                <field id="required_attributes" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Required Attributes</label>
-                    <comment><![CDATA[Comma-separated list of Magento attribute codes (e.g., revenue_group, brand2, leverancier).
-                    Products will be skipped during import if any of these attributes have empty values.
-                    This prevents the import from failing when the supplied data is incomplete.]]></comment>
-                </field>
-                <field id="attributes" translate="label" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Attribute Mapping</label>
-                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\Form\Field\AttributeMapping</frontend_model>
-                    <backend_model>ReachDigital\Vendit\Model\Config\Backend\AttributeMapping</backend_model>
-                </field>
-            </group>
-            <group id="order_status_mapping" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Order Status Mapping</label>
-                <comment><![CDATA[Map Vendit order statuses to Magento order statuses. This is used by the order update import.]]></comment>
-                <field id="status_mapping" translate="label" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                    <label>Status Mapping</label>
-                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\Form\Field\OrderStatusMapping</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment><![CDATA[Map Vendit Status IDs to Magento order statuses. The Vendit Status ID can be found in the
-                    order updates XML file (<code>OrderStatusId</code> field). Optional: add the Vendit Status Description for future reference.<br/>
-                    <b>Note:</b> The Magento statuses are sorted by order state.<br/>
-                    <b style="color: #eb5202">Important note:</b> By default, the 'Uitgeleverd' Vendit status is linked to the complete status '<i>Uitgeleverd (complete)</i>'.
-                    This means that a shipment is created in Magento to complete the order. If the order should remain processing in Magento, please
-                    link the 'Uitgeleverd' Vendit status to the processing status '<i>Uitgeleverd</i>'.]]></comment>
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>General</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Enable or disable the complete Vendit integration.]]></comment>
                 </field>
             </group>
             <group id="directory_mapping" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
@@ -114,6 +80,53 @@
                         For example: Order_%s.xml]]></comment>
                     </field>
                 </group>
+            </group>
+        </section>
+        <section id="vendit_mapping" translate="label" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+            <label>Import/Export Mapping</label>
+            <tab>vendit</tab>
+            <resource>ReachDigital_Vendit::config</resource>
+            <group id="attribute_mapping" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Product Attribute Mapping</label>
+                <comment><![CDATA[Map Vendit Specs to Magento product attributes. Spec names are case-sensitive.]]></comment>
+                <field id="size_attribute" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Size Attribute</label>
+                    <comment><![CDATA[Select which product attribute to use for configurable product size variations (maps to Vendit 'Size' field).]]></comment>
+                    <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
+                    <validate>required</validate>
+                </field>
+                <field id="barcode_attribute" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Barcode Attribute</label>
+                    <comment><![CDATA[Select which product attribute to use for matching Vendit barcodes for the stock import.]]></comment>
+                    <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
+                    <validate>required</validate>
+                </field>
+                <field id="required_attributes" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Required Attributes</label>
+                    <comment><![CDATA[Comma-separated list of Magento attribute codes (e.g., revenue_group, brand2, leverancier).
+                    Products will be skipped during import if any of these attributes have empty values.
+                    This prevents the import from failing when the supplied data is incomplete.]]></comment>
+                </field>
+                <field id="attributes" translate="label" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Attribute Mapping</label>
+                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\Form\Field\AttributeMapping</frontend_model>
+                    <backend_model>ReachDigital\Vendit\Model\Config\Backend\AttributeMapping</backend_model>
+                </field>
+            </group>
+            <group id="order_status_mapping" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Order Status Mapping</label>
+                <comment><![CDATA[Map Vendit order statuses to Magento order statuses. This is used by the order update import.]]></comment>
+                <field id="status_mapping" translate="label" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Status Mapping</label>
+                    <frontend_model>ReachDigital\Vendit\Block\Adminhtml\Form\Field\OrderStatusMapping</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment><![CDATA[Map Vendit Status IDs to Magento order statuses. The Vendit Status ID can be found in the
+                    order updates XML file (<code>OrderStatusId</code> field). Optional: add the Vendit Status Description for future reference.<br/>
+                    <b>Note:</b> The Magento statuses are sorted by order state.<br/>
+                    <b style="color: #eb5202">Important note:</b> By default, the 'Uitgeleverd' Vendit status is linked to the complete status '<i>Uitgeleverd (complete)</i>'.
+                    This means that a shipment is created in Magento to complete the order. If the order should remain processing in Magento, please
+                    link the 'Uitgeleverd' Vendit status to the processing status '<i>Uitgeleverd</i>'.]]></comment>
+                </field>
             </group>
         </section>
     </system>

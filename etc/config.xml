@@ -26,9 +26,11 @@
                     <order_file>Order_%s.xml</order_file>
                 </export>
             </directory_mapping>
+        </vendit>
+        <vendit_mapping>
             <order_status_mapping>
                 <status_mapping>{"_1761907627845_845":{"vendit_status_id":"1","vendit_status_description":"Nieuwe order","magento_status":"vendit_nieuwe_order"},"_1761907740309_309":{"vendit_status_id":"2","vendit_status_description":"In behandeling","magento_status":"vendit_in_behandeling"},"_1761907741402_402":{"vendit_status_id":"3","vendit_status_description":"Voorraad gereserveerd","magento_status":"vendit_voorraad_gereserveerd"},"_1761907741983_983":{"vendit_status_id":"4","vendit_status_description":"Assemblage","magento_status":"vendit_assemblage"},"_1761907759358_358":{"vendit_status_id":"5","vendit_status_description":"Klaar \/ factureren","magento_status":"vendit_klaar_factureren"},"_1761907780293_293":{"vendit_status_id":"6","vendit_status_description":"Niet geactiveerd","magento_status":"vendit_niet_geactiveerd"},"_1761907789014_14":{"vendit_status_id":"7","vendit_status_description":"Gedeeltelijk uitgeleverd","magento_status":"vendit_gedeeltelijk_uitgeleverd"},"_1761907797160_160":{"vendit_status_id":"8","vendit_status_description":"Uitgeleverd","magento_status":"vendit_uitgeleverd_complete"},"_1761907807369_369":{"vendit_status_id":"9","vendit_status_description":"Gefactureerd","magento_status":"vendit_gefactureerd"},"_1761907814679_679":{"vendit_status_id":"10","vendit_status_description":"Nieuwe order E-commerce","magento_status":"vendit_nieuwe_order_e_commerce"},"_1761907824724_724":{"vendit_status_id":"11","vendit_status_description":"Wordt gepickt","magento_status":"vendit_wordt_gepickt"},"_1761907832130_130":{"vendit_status_id":"12","vendit_status_description":"Is gepickt","magento_status":"vendit_is_gepickt"},"_1761907839138_138":{"vendit_status_id":"13","vendit_status_description":"Incompleet gepickt","magento_status":"vendit_incompleet_gepickt"},"_1761920307416_416":{"vendit_status_id":"0","vendit_status_description":"Vervallen","magento_status":"vendit_vervallen"}}</status_mapping>
             </order_status_mapping>
-        </vendit>
+        </vendit_mapping>
     </default>
 </config>

@@ -17,11 +17,11 @@ class Config
 {
     const DIR_MAPPING_CONFIG_PATH = 'vendit/directory_mapping';
 
-    const XML_PATH_ATTRIBUTE_MAPPING = 'vendit/attribute_mapping/attributes';
-    const XML_PATH_REQUIRED_ATTRIBUTES = 'vendit/attribute_mapping/required_attributes';
-    const XML_PATH_SIZE_ATTRIBUTE = 'vendit/attribute_mapping/size_attribute';
-    const XML_PATH_BARCODE_ATTRIBUTE = 'vendit/attribute_mapping/barcode_attribute';
-    const XML_PATH_ORDER_STATUS_MAPPING = 'vendit/order_status_mapping/status_mapping';
+    const XML_PATH_ATTRIBUTE_MAPPING = 'vendit_mapping/attribute_mapping/attributes';
+    const XML_PATH_REQUIRED_ATTRIBUTES = 'vendit_mapping/attribute_mapping/required_attributes';
+    const XML_PATH_SIZE_ATTRIBUTE = 'vendit_mapping/attribute_mapping/size_attribute';
+    const XML_PATH_BARCODE_ATTRIBUTE = 'vendit_mapping/attribute_mapping/barcode_attribute';
+    const XML_PATH_ORDER_STATUS_MAPPING = 'vendit_mapping/order_status_mapping/status_mapping';
 
     const TYPE_CATEGORY = 'category';
     const TYPE_CUSTOMER = 'customer';
