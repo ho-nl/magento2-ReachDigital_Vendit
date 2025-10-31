@@ -21,6 +21,7 @@ class Config
     const XML_PATH_REQUIRED_ATTRIBUTES = 'vendit/attribute_mapping/required_attributes';
     const XML_PATH_SIZE_ATTRIBUTE = 'vendit/attribute_mapping/size_attribute';
     const XML_PATH_BARCODE_ATTRIBUTE = 'vendit/attribute_mapping/barcode_attribute';
+    const XML_PATH_ORDER_STATUS_MAPPING = 'vendit/order_status_mapping/status_mapping';
 
     const TYPE_CATEGORY = 'category';
     const TYPE_CUSTOMER = 'customer';
@@ -171,5 +172,42 @@ class Config
     public function getBarcodeAttribute(): ?string
     {
         return $this->scopeConfig->getValue(self::XML_PATH_BARCODE_ATTRIBUTE);
+    }
+
+    /**
+     * Get order status mapping (Vendit Status ID => Magento Status)
+     */
+    public function getOrderStatusMapping(): array
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_ORDER_STATUS_MAPPING);
+
+        if (!$value) {
+            return [];
+        }
+
+        try {
+            $mapping = $this->serializer->unserialize($value);
+
+            if (!is_array($mapping)) {
+                return [];
+            }
+
+            // Convert to vendit_status_id => magento_status format
+            $result = [];
+            foreach ($mapping as $statusMap) {
+                if (
+                    isset($statusMap['vendit_status_id']) &&
+                    isset($statusMap['magento_status']) &&
+                    !empty($statusMap['vendit_status_id']) &&
+                    !empty($statusMap['magento_status'])
+                ) {
+                    $result[$statusMap['vendit_status_id']] = $statusMap['magento_status'];
+                }
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 }

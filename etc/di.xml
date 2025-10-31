@@ -11,12 +11,29 @@
                 <item name="order_export" xsi:type="object">ReachDigital\Vendit\Console\Command\ExportOrders</item>
                 <item name="customer_export" xsi:type="object">ReachDigital\Vendit\Console\Command\ExportCustomers</item>
                 <!-- Import Commands -->
+                <item name="category_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportCategories</item>
                 <item name="customer_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportCustomers</item>
                 <item name="product_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportProducts</item>
                 <item name="stock_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportStock</item>
+                <item name="orderstatus_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportOrderStatus</item>
                 <!-- Utility Commands -->
                 <item name="trim_attribute_options" xsi:type="object">ReachDigital\Vendit\Console\Command\TrimAttributeOptions</item>
                 <item name="lowercase_attribute_codes" xsi:type="object">ReachDigital\Vendit\Console\Command\LowercaseAttributeCodes</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Custom logger for order status imports -->
+    <type name="ReachDigital\Vendit\Logger\OrderStatusHandler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="ReachDigital\Vendit\Logger\OrderStatusLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">vendit_order_status</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">ReachDigital\Vendit\Logger\OrderStatusHandler</item>
             </argument>
         </arguments>
     </type>

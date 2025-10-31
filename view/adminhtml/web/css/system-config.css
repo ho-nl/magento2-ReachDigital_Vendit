@@ -1,4 +1,5 @@
-.config#vendit_attribute_mapping {
+.config#vendit_attribute_mapping,
+.config#vendit_order_status_mapping {
   colgroup.label,
   td.label {
     width: 15%;
@@ -7,6 +8,9 @@
   td.value {
     width: 85%;
   }
+}
+
+.config#vendit_attribute_mapping {
   .admin__control-table td:first-child,
   .admin__control-table th:first-child {
     width: 60%;
