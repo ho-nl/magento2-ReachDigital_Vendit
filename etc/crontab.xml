@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright © Reach Digital (https://www.reachdigital.io/)
+  ~ See LICENSE.txt for license details.
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="vendit_process_product_import" instance="ReachDigital\Vendit\Cron\ProcessProductImport" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+        <job name="vendit_process_stock_import" instance="ReachDigital\Vendit\Cron\ProcessStockImport" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+        <job name="vendit_process_category_import" instance="ReachDigital\Vendit\Cron\ProcessCategoryImport" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+        <job name="vendit_process_customer_import" instance="ReachDigital\Vendit\Cron\ProcessCustomerImport" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+        <job name="vendit_process_order_import" instance="ReachDigital\Vendit\Cron\ProcessOrderImport" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+    </group>
+</config>
