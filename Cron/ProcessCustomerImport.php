@@ -10,12 +10,14 @@ namespace ReachDigital\Vendit\Cron;
 
 use Magento\Framework\App\State;
 use Psr\Log\LoggerInterface;
+use ReachDigital\Vendit\Model\MoveImportFiles;
 use ReachDigital\Vendit\Model\ProcessImportFiles;
 use ReachDigital\Vendit\Model\Config;
 
 class ProcessCustomerImport
 {
     public function __construct(
+        private readonly MoveImportFiles $moveImportFiles,
         private readonly ProcessImportFiles $processImportFiles,
         private readonly State $state,
         private readonly LoggerInterface $logger,
@@ -31,6 +33,10 @@ class ProcessCustomerImport
         }
 
         try {
+            // First, move any new files to processing queue
+            $this->moveImportFiles->execute();
+
+            // Then process files from the processing queue
             $processed = $this->processImportFiles->process(Config::TYPE_CUSTOMER);
 
             if ($processed) {

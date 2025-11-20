@@ -10,15 +10,20 @@ namespace ReachDigital\Vendit\Console\Command;
 
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
-use ReachDigital\Vendit\Model\ImportOrderStatusXml;
+use ReachDigital\Vendit\Model\MoveImportFiles;
+use ReachDigital\Vendit\Model\ProcessImportFiles;
+use ReachDigital\Vendit\Model\Config;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ImportOrderStatus extends Command
 {
-    public function __construct(private readonly ImportOrderStatusXml $importer, private readonly State $state)
-    {
+    public function __construct(
+        private readonly MoveImportFiles $moveImportFiles,
+        private readonly ProcessImportFiles $processImportFiles,
+        private readonly State $state,
+    ) {
         parent::__construct();
     }
 
@@ -40,8 +45,21 @@ class ImportOrderStatus extends Command
         }
 
         try {
-            $this->importer->run();
-            $output->writeln('<info>Order status successfully imported</info>');
+            // First, move any files to processing queue (same as webhook)
+            $movedFiles = $this->moveImportFiles->execute();
+
+            if (!empty($movedFiles)) {
+                $output->writeln(sprintf('<info>Moved %d file(s) to processing queue</info>', count($movedFiles)));
+            }
+
+            // Then process files from the processing queue
+            $processed = $this->processImportFiles->process(Config::TYPE_ORDER);
+
+            if ($processed > 0) {
+                $output->writeln(sprintf('<info>Successfully processed %d order import file(s)</info>', $processed));
+            } else {
+                $output->writeln('<info>No order import files to process</info>');
+            }
 
             return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {
