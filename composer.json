@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Vendit Magento 2 Connector",
   "require": {
-    "php": "~8.1",
+    "php": "~8.2",
     "magento/product-community-edition": "^2.4",
     "honl/magento2-import": "^1.3"
   },
