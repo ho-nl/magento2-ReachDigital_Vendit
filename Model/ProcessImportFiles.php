@@ -96,8 +96,7 @@ class ProcessImportFiles
 
         // Remove existing file if present
         if ($this->ioFile->fileExists($configuredPath)) {
-            // @todo temporary, for testing purposes
-            //            $this->ioFile->rm($configuredPath);
+            $this->ioFile->rm($configuredPath);
         }
 
         // Copy file to configured location where importer expects it
@@ -122,8 +121,7 @@ class ProcessImportFiles
         } finally {
             // Clean up the temporary file
             if ($this->ioFile->fileExists($configuredPath)) {
-                // @todo temporary, for testing purposes
-                //                $this->ioFile->rm($configuredPath);
+                $this->ioFile->rm($configuredPath);
             }
         }
     }

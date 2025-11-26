@@ -87,9 +87,7 @@ class MoveImportFiles
             $destinationPath = $processingDir . DIRECTORY_SEPARATOR . $newFilename;
 
             // Move file
-            // @todo temporary, for testing purposes
-            //            if (!$this->ioFile->mv($sourcePath, $destinationPath)) {
-            if (!$this->ioFile->cp($sourcePath, $destinationPath)) {
+            if (!$this->ioFile->mv($sourcePath, $destinationPath)) {
                 throw new \Exception(sprintf('Failed to move file from %s to %s', $sourcePath, $destinationPath));
             }
 
