@@ -210,6 +210,37 @@ class ImportProductsXml extends ImportProfile
             return $size && !is_array($size) ? trim($size) : null;
         };
 
+        // Add barcode attribute mapping (from Vendit Barcodes/Barcode field)
+        $barcodeAttribute = $this->config->getBarcodeAttribute();
+        if ($barcodeAttribute) {
+            $mapping[$barcodeAttribute] = function ($item) {
+                // Skip for configurable parents
+                if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
+                    return null;
+                }
+
+                // Get barcode from ProductVariation
+                $barcodes = $item['ProductVariations']['ProductVariation']['Barcodes']['Barcode'] ?? null;
+
+                if (empty($barcodes)) {
+                    return null;
+                }
+
+                // If it's a single barcode (string), return it
+                if (is_string($barcodes)) {
+                    return trim($barcodes);
+                }
+
+                // If it's an array of barcodes, return the first one
+                if (is_array($barcodes)) {
+                    $firstBarcode = reset($barcodes);
+                    return is_string($firstBarcode) ? trim($firstBarcode) : null;
+                }
+
+                return null;
+            };
+        }
+
         // Add dynamically mapped attributes from config
         $attributeMapping = $this->config->getAttributeMapping();
         foreach ($attributeMapping as $specName => $attributeCode) {

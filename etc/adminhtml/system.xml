@@ -85,7 +85,7 @@
                     <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
                     <validate>required</validate>
                 </field>
-                <field id="barcode_attribute" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="barcode_attribute" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Barcode Attribute</label>
                     <comment><![CDATA[Select which product attribute to use for matching Vendit barcodes for the stock import.]]></comment>
                     <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
@@ -93,7 +93,7 @@
                 </field>
                 <field id="required_attributes" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Required Attributes</label>
-                    <comment><![CDATA[Comma-separated list of Magento attribute codes (e.g., revenue_group, brand2, leverancier).
+                    <comment><![CDATA[Comma-separated list of Magento attribute codes.
                     Products will be skipped during import if any of these attributes have empty values.
                     This prevents the import from failing when the supplied data is incomplete.]]></comment>
                 </field>
