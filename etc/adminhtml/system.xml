@@ -91,6 +91,12 @@
                     <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
                     <validate>required</validate>
                 </field>
+                <field id="tax_class_id" translate="label comment" type="select" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Tax Class</label>
+                    <comment><![CDATA[Select which tax class to apply to imported products.]]></comment>
+                    <source_model>Magento\Tax\Model\TaxClass\Source\Product</source_model>
+                    <validate>required</validate>
+                </field>
                 <field id="required_attributes" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Required Attributes</label>
                     <comment><![CDATA[Comma-separated list of Magento attribute codes.

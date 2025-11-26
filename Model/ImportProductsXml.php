@@ -116,8 +116,7 @@ class ImportProductsXml extends ImportProfile
                 $price = $item['ProductVariations']['ProductVariation']['SalesPriceEx'] ?? 0;
                 return is_numeric($price) ? (float) $price : 0;
             },
-            // @todo configurable tax class id
-            'tax_class_id' => 2,
+            'tax_class_id' => $this->config->getTaxClassId(),
             'visibility' => function ($item) {
                 // Configurable parents should be visible
                 if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
