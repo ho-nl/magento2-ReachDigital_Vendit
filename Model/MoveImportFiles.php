@@ -14,10 +14,8 @@ class MoveImportFiles
 {
     private const PROCESSING_SUBDIRECTORY = 'processing';
 
-    public function __construct(
-        private readonly Config $config,
-        private readonly IoFile $ioFile,
-    ) {
+    public function __construct(private readonly Config $config, private readonly IoFile $ioFile)
+    {
     }
 
     /**
@@ -40,67 +38,75 @@ class MoveImportFiles
         ];
 
         foreach ($importTypes as $type) {
-            $moved = $this->moveImportFile($type);
-            if ($moved) {
-                $movedFiles[] = $moved;
-            }
+            $moved = $this->moveImportFiles($type);
+            $movedFiles = array_merge($movedFiles, $moved);
         }
 
         return $movedFiles;
     }
 
     /**
-     * Move import file for specific type to processing subdirectory
+     * Move all import files for specific type to processing subdirectory
      *
      * @param string $type
-     * @return string|null Path to moved file, or null if no file to move
+     * @return array Paths to moved files
      * @throws \Exception
      */
-    private function moveImportFile(string $type): ?string
+    private function moveImportFiles(string $type): array
     {
-        $sourcePath = $this->getImportFilePath($type);
+        $movedFiles = [];
+        $sourceDir = $this->getImportDirectory($type);
+        $prefix = $this->config->getFilePrefix($type);
 
-        if (!$this->ioFile->fileExists($sourcePath)) {
-            return null;
+        // Get all matching files
+        if ($prefix) {
+            $files = glob($sourceDir . DIRECTORY_SEPARATOR . $prefix . '*.xml') ?: [];
+        } else {
+            $files = glob($sourceDir . DIRECTORY_SEPARATOR . '*.xml') ?: [];
+        }
+
+        if (empty($files)) {
+            return [];
         }
 
         // Create processing subdirectory if it doesn't exist
-        $sourceDir = dirname($sourcePath);
         $processingDir = $sourceDir . DIRECTORY_SEPARATOR . self::PROCESSING_SUBDIRECTORY;
 
-        if (!$this->ioFile->fileExists($processingDir)) {
+        if (!is_dir($processingDir)) {
             $this->ioFile->mkdir($processingDir, 0775);
         }
 
-        // Generate unique filename with timestamp
-        $filename = basename($sourcePath);
-        $timestamp = date('YmdHis');
-        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
-        $extension = pathinfo($filename, PATHINFO_EXTENSION);
-        $newFilename = sprintf('%s_%s.%s', $nameWithoutExt, $timestamp, $extension);
+        foreach ($files as $sourcePath) {
+            // Generate unique filename with timestamp
+            $filename = basename($sourcePath);
+            $timestamp = date('YmdHis');
+            $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            $newFilename = sprintf('%s_%s.%s', $nameWithoutExt, $timestamp, $extension);
 
-        $destinationPath = $processingDir . DIRECTORY_SEPARATOR . $newFilename;
+            $destinationPath = $processingDir . DIRECTORY_SEPARATOR . $newFilename;
 
-        // Move file
-        if (!$this->ioFile->mv($sourcePath, $destinationPath)) {
-            throw new \Exception(sprintf('Failed to move file from %s to %s', $sourcePath, $destinationPath));
+            // Move file
+            // @todo temporary, for testing purposes
+            //            if (!$this->ioFile->mv($sourcePath, $destinationPath)) {
+            if (!$this->ioFile->cp($sourcePath, $destinationPath)) {
+                throw new \Exception(sprintf('Failed to move file from %s to %s', $sourcePath, $destinationPath));
+            }
+
+            $movedFiles[] = $destinationPath;
         }
 
-        return $destinationPath;
+        return $movedFiles;
     }
 
     /**
-     * Get import file path for specific type
+     * Get import directory for specific type
      */
-    private function getImportFilePath(string $type): string
+    private function getImportDirectory(string $type): string
     {
         return match ($type) {
-            Config::TYPE_PRODUCT => $this->config->getProductImportFilePath(),
-            Config::TYPE_STOCK => $this->config->getStockImportFilePath(),
-            Config::TYPE_CATEGORY => $this->config->getCategoryImportFilePath(),
-            Config::TYPE_CUSTOMER => $this->config->getCustomerImportFilePath(),
-            Config::TYPE_ORDER => $this->config->getOrderImportFilePath(),
-            default => throw new \InvalidArgumentException("Unknown import type: {$type}"),
+            Config::TYPE_ORDER => $this->config->getOrderImportDirectory(),
+            default => $this->config->getImportFilesDirectory(),
         };
     }
 }

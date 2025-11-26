@@ -32,37 +32,23 @@
                 </field>
                 <group id="import" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import</label>
-                    <field id="product_path" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Products File Path</label>
+                    <field id="file_path" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>File Path</label>
                     </field>
-                    <field id="product_file" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Products File</label>
+                    <field id="product_file_prefix" translate="label" type="text" sortOrder="11" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Product File Prefix</label>
                     </field>
-                    <field id="stock_path" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Stock File Path</label>
+                    <field id="stock_file_prefix" translate="label" type="text" sortOrder="12" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Stock File Prefix</label>
                     </field>
-                    <field id="stock_file" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Stock File</label>
+                    <field id="customer_file_prefix" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Customer File Prefix</label>
                     </field>
-                    <field id="category_path" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Categories File Path</label>
-                        <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
+                    <field id="image_path" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                        <label>Images Path</label>
                     </field>
-                    <field id="category_file" translate="label" type="text" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Categories File</label>
-                        <comment><![CDATA[Known as 'groups' in Vendit]]></comment>
-                    </field>
-                    <field id="customer_path" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Customers File Path</label>
-                    </field>
-                    <field id="customer_file" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Customers File</label>
-                    </field>
-                    <field id="order_path" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <field id="order_path" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Order Updates File Path</label>
-                    </field>
-                    <field id="order_file" translate="label" type="text" sortOrder="55" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Order Updates File</label>
                     </field>
                 </group>
                 <group id="export" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">

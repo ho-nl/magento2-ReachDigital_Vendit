@@ -46,8 +46,8 @@ class ImportStockXml extends ImportProfile
         return [
             'behavior' => Import::BEHAVIOR_APPEND,
             'entity' => Product::ENTITY,
-            'validation_strategy' => ProcessingErrorAggregatorInterface::VALIDATION_STRATEGY_SKIP_ERRORS,
-            'allowed_error_count' => 100,
+            'validation_strategy' => ProcessingErrorAggregatorInterface::VALIDATION_STRATEGY_STOP_ON_ERROR,
+            'allowed_error_count' => 0,
         ];
     }
 

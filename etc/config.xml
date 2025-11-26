@@ -8,16 +8,13 @@
         <vendit>
             <directory_mapping>
                 <import>
-                    <product_path>vendit/import/products</product_path>
-                    <product_file>Products.xml</product_file>
-                    <stock_path>vendit/import/stock</stock_path>
-                    <stock_file>Stock.xml</stock_file>
-                    <category_path>vendit/import/categories</category_path>
-                    <category_file>Groups.xml</category_file>
-                    <customer_path>vendit/import/customers</customer_path>
-                    <customer_file>Customers.xml</customer_file>
+                    <file_path>vendit/import/files</file_path>
+                    <product_file_prefix>Products</product_file_prefix>
+                    <stock_file_prefix>Stock</stock_file_prefix>
+                    <category_file_prefix>Groups</category_file_prefix>
+                    <customer_file_prefix>Customers</customer_file_prefix>
+                    <image_path>vendit/import/images</image_path>
                     <order_path>vendit/import/orders</order_path>
-                    <order_file>Orderstatus.xml</order_file>
                 </import>
                 <export>
                     <customer_path>vendit/export/customers</customer_path>

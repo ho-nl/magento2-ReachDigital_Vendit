@@ -39,12 +39,12 @@ class ProcessImportFiles
     {
         $processingDir = $this->getProcessingDirectory($type);
 
-        if (!$this->ioFile->fileExists($processingDir)) {
+        if (!is_dir($processingDir)) {
             return 0;
         }
 
-        // Get all XML files in processing directory
-        $files = glob($processingDir . DIRECTORY_SEPARATOR . '*.xml');
+        // Get all XML files matching the prefix for this type
+        $files = $this->getMatchingFiles($processingDir, $type);
 
         if (empty($files)) {
             return 0;
@@ -58,9 +58,12 @@ class ProcessImportFiles
                 $this->moveToProcessed($file, $type);
                 $processed++;
             } catch (\Exception $e) {
-                $this->logger->error(sprintf('Failed to process %s import file %s: %s', $type, $file, $e->getMessage()), [
-                    'exception' => $e,
-                ]);
+                $this->logger->error(
+                    sprintf('Failed to process %s import file %s: %s', $type, $file, $e->getMessage()),
+                    [
+                        'exception' => $e,
+                    ],
+                );
                 $this->moveToFailed($file, $type, $e->getMessage());
             }
         }
@@ -69,39 +72,84 @@ class ProcessImportFiles
     }
 
     /**
+     * Get files matching the prefix for the import type
+     */
+    private function getMatchingFiles(string $directory, string $type): array
+    {
+        $prefix = $this->config->getFilePrefix($type);
+
+        if (!$prefix) {
+            // If no prefix configured, return all XML files
+            return glob($directory . DIRECTORY_SEPARATOR . '*.xml') ?: [];
+        }
+
+        // Get files matching the prefix
+        return glob($directory . DIRECTORY_SEPARATOR . $prefix . '*.xml') ?: [];
+    }
+
+    /**
      * Process single import file
      */
     private function processFile(string $filePath, string $type): void
     {
-        // Temporarily update config to point to the file in processing directory
-        $originalPath = $this->getImportFilePath($type);
         $configuredPath = $this->getConfiguredImportPath($type);
 
-        // Create a symlink or copy to the original location
+        // Remove existing file if present
         if ($this->ioFile->fileExists($configuredPath)) {
-            $this->ioFile->rm($configuredPath);
+            // @todo temporary, for testing purposes
+            //            $this->ioFile->rm($configuredPath);
         }
 
-        // Copy file to configured location
+        // Copy file to configured location where importer expects it
         $this->ioFile->cp($filePath, $configuredPath);
 
         try {
+            // Validate XML before processing
+            $this->validateXmlFile($configuredPath);
+
             // Run the appropriate importer
             $importer = $this->getImporter($type);
-            $importer->run();
+            $result = $importer->run();
+
+            // Check if import failed (Ho\Import returns CLI exit codes)
+            if ($result !== \Magento\Framework\Console\Cli::RETURN_SUCCESS) {
+                $errorMessage =
+                    method_exists($importer, 'getException') && $importer->getException()
+                        ? $importer->getException()->getMessage()
+                        : 'Import failed with unknown error';
+                throw new \Exception($errorMessage);
+            }
         } finally {
             // Clean up the temporary file
             if ($this->ioFile->fileExists($configuredPath)) {
-                $this->ioFile->rm($configuredPath);
+                // @todo temporary, for testing purposes
+                //                $this->ioFile->rm($configuredPath);
             }
+        }
+    }
+
+    /**
+     * Validate XML file is well-formed before processing
+     */
+    private function validateXmlFile(string $filePath): void
+    {
+        libxml_use_internal_errors(true);
+        $xml = simplexml_load_file($filePath);
+
+        if ($xml === false) {
+            $errors = libxml_get_errors();
+            libxml_clear_errors();
+            $errorMessages = array_map(fn($e) => trim($e->message), $errors);
+            throw new \Exception('Invalid XML file: ' . implode(', ', $errorMessages));
         }
     }
 
     /**
      * Get importer instance for type
      */
-    private function getImporter(string $type): ImportProductsXml|ImportStockXml|ImportCategoriesXml|ImportCustomersXml|ImportOrderStatusXml
-    {
+    private function getImporter(
+        string $type,
+    ): ImportProductsXml|ImportStockXml|ImportCategoriesXml|ImportCustomersXml|ImportOrderStatusXml {
         return match ($type) {
             Config::TYPE_PRODUCT => $this->productImporter,
             Config::TYPE_STOCK => $this->stockImporter,
@@ -117,8 +165,7 @@ class ProcessImportFiles
      */
     private function getProcessingDirectory(string $type): string
     {
-        $importPath = $this->getImportFilePath($type);
-        $baseDir = dirname($importPath);
+        $baseDir = $this->getImportDirectory($type);
 
         return $baseDir . DIRECTORY_SEPARATOR . self::PROCESSING_SUBDIRECTORY;
     }
@@ -128,7 +175,11 @@ class ProcessImportFiles
      */
     private function getConfiguredImportPath(string $type): string
     {
-        return $this->getImportFilePath($type);
+        $directory = $this->getImportDirectory($type);
+        $prefix = $this->config->getFilePrefix($type);
+
+        // For temporary processing, use a generic filename with the prefix
+        return $directory . DIRECTORY_SEPARATOR . $prefix . '.xml';
     }
 
     /**
@@ -136,11 +187,10 @@ class ProcessImportFiles
      */
     private function moveToProcessed(string $filePath, string $type): void
     {
-        $importPath = $this->getImportFilePath($type);
-        $baseDir = dirname($importPath);
+        $baseDir = $this->getImportDirectory($type);
         $processedDir = $baseDir . DIRECTORY_SEPARATOR . self::PROCESSED_SUBDIRECTORY;
 
-        if (!$this->ioFile->fileExists($processedDir)) {
+        if (!is_dir($processedDir)) {
             $this->ioFile->mkdir($processedDir, 0775);
         }
 
@@ -153,11 +203,10 @@ class ProcessImportFiles
      */
     private function moveToFailed(string $filePath, string $type, string $errorMessage): void
     {
-        $importPath = $this->getImportFilePath($type);
-        $baseDir = dirname($importPath);
+        $baseDir = $this->getImportDirectory($type);
         $failedDir = $baseDir . DIRECTORY_SEPARATOR . self::FAILED_SUBDIRECTORY;
 
-        if (!$this->ioFile->fileExists($failedDir)) {
+        if (!is_dir($failedDir)) {
             $this->ioFile->mkdir($failedDir, 0775);
         }
 
@@ -166,25 +215,17 @@ class ProcessImportFiles
 
         // Write error log file
         $errorLogPath = $destination . '.error.log';
-        file_put_contents($errorLogPath, sprintf(
-            "Error: %s\nTimestamp: %s\n",
-            $errorMessage,
-            date('Y-m-d H:i:s')
-        ));
+        file_put_contents($errorLogPath, sprintf("Error: %s\nTimestamp: %s\n", $errorMessage, date('Y-m-d H:i:s')));
     }
 
     /**
-     * Get import file path for type
+     * Get import directory for type
      */
-    private function getImportFilePath(string $type): string
+    private function getImportDirectory(string $type): string
     {
         return match ($type) {
-            Config::TYPE_PRODUCT => $this->config->getProductImportFilePath(),
-            Config::TYPE_STOCK => $this->config->getStockImportFilePath(),
-            Config::TYPE_CATEGORY => $this->config->getCategoryImportFilePath(),
-            Config::TYPE_CUSTOMER => $this->config->getCustomerImportFilePath(),
-            Config::TYPE_ORDER => $this->config->getOrderImportFilePath(),
-            default => throw new \InvalidArgumentException("Unknown import type: {$type}"),
+            Config::TYPE_ORDER => $this->config->getOrderImportDirectory(),
+            default => $this->config->getImportFilesDirectory(),
         };
     }
 }

@@ -40,55 +40,116 @@ class Config
     ) {
     }
 
-    public function getCategoryImportFilePath(): string
+    public function getImportFilesDirectory(): string
     {
-        return $this->getFilePath(self::TYPE_CATEGORY, self::IMPORT);
-    }
+        $path = trim($this->scopeConfig->getValue(self::DIR_MAPPING_CONFIG_PATH . '/import/file_path'), '/');
 
-    public function getCustomerImportFilePath(): string
-    {
-        return $this->getFilePath(self::TYPE_CUSTOMER, self::IMPORT);
-    }
+        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $path;
 
-    public function getCustomerExportFilePath(): string
-    {
-        return $this->getFilePath(self::TYPE_CUSTOMER, self::EXPORT);
-    }
+        if (!is_dir($directory)) {
+            $this->ioFile->mkdir($directory, 0775);
+        }
 
-    public function getOrderImportFilePath(): string
-    {
-        return $this->getFilePath(self::TYPE_ORDER, self::IMPORT);
-    }
-
-    public function getOrderExportFilePath(): string
-    {
-        return $this->getFilePath(self::TYPE_ORDER, self::EXPORT);
+        return $directory;
     }
 
     public function getProductImportFilePath(): string
     {
-        return $this->getFilePath(self::TYPE_PRODUCT, self::IMPORT);
+        return $this->getImportFilePathForType(self::TYPE_PRODUCT);
     }
 
     public function getStockImportFilePath(): string
     {
-        return $this->getFilePath(self::TYPE_STOCK, self::IMPORT);
+        return $this->getImportFilePathForType(self::TYPE_STOCK);
     }
 
-    protected function getFilePath(string $entityType, string $type): string
+    public function getCategoryImportFilePath(): string
+    {
+        return $this->getImportFilePathForType(self::TYPE_CATEGORY);
+    }
+
+    public function getCustomerImportFilePath(): string
+    {
+        return $this->getImportFilePathForType(self::TYPE_CUSTOMER);
+    }
+
+    public function getOrderImportFilePath(): string
+    {
+        $directory = $this->getOrderImportDirectory();
+        $files = glob($directory . DIRECTORY_SEPARATOR . '*.xml');
+
+        // Return first XML file found, or construct path with generic name
+        if (!empty($files)) {
+            return $files[0];
+        }
+
+        return $directory . DIRECTORY_SEPARATOR . 'Orderstatus.xml';
+    }
+
+    private function getImportFilePathForType(string $type): string
+    {
+        $directory = $this->getImportFilesDirectory();
+        $prefix = $this->getFilePrefix($type);
+
+        if (!$prefix) {
+            return $directory . DIRECTORY_SEPARATOR . ucfirst($type) . '.xml';
+        }
+
+        // Check if there are any files matching the prefix
+        $files = glob($directory . DIRECTORY_SEPARATOR . $prefix . '*.xml');
+
+        // Return first matching file, or construct path with prefix
+        if (!empty($files)) {
+            return $files[0];
+        }
+
+        return $directory . DIRECTORY_SEPARATOR . $prefix . '.xml';
+    }
+
+    public function getOrderImportDirectory(): string
+    {
+        $path = trim($this->scopeConfig->getValue(self::DIR_MAPPING_CONFIG_PATH . '/import/order_path'), '/');
+
+        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $path;
+
+        if (!is_dir($directory)) {
+            $this->ioFile->mkdir($directory, 0775);
+        }
+
+        return $directory;
+    }
+
+    public function getFilePrefix(string $entityType): ?string
+    {
+        return $this->scopeConfig->getValue(
+            sprintf(self::DIR_MAPPING_CONFIG_PATH . '/import/%s_file_prefix', $entityType),
+        );
+    }
+
+    public function getCustomerExportFilePath(): string
+    {
+        return $this->getExportFilePath(self::TYPE_CUSTOMER);
+    }
+
+    public function getOrderExportFilePath(): string
+    {
+        return $this->getExportFilePath(self::TYPE_ORDER);
+    }
+
+    protected function getExportFilePath(string $entityType): string
     {
         $path = trim(
-            $this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/%s/%s_path', $type, $entityType)),
+            $this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/export/%s_path', $entityType)),
             '/',
         );
         $filename = trim(
-            $this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/%s/%s_file', $type, $entityType)),
+            $this->scopeConfig->getValue(sprintf(self::DIR_MAPPING_CONFIG_PATH . '/export/%s_file', $entityType)),
             '/',
         );
 
         $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $path;
 
-        if (!$this->ioFile->fileExists($directory)) {
+        if (!is_dir($directory)) {
             $this->ioFile->mkdir($directory, 0775);
         }
 

@@ -48,8 +48,8 @@ class ImportProductsXml extends ImportProfile
         return [
             'behavior' => Import::BEHAVIOR_APPEND,
             'entity' => Product::ENTITY,
-            'validation_strategy' => ProcessingErrorAggregatorInterface::VALIDATION_STRATEGY_SKIP_ERRORS,
-            'allowed_error_count' => 100,
+            'validation_strategy' => ProcessingErrorAggregatorInterface::VALIDATION_STRATEGY_STOP_ON_ERROR,
+            'allowed_error_count' => 0,
         ];
     }
 
@@ -70,9 +70,9 @@ class ImportProductsXml extends ImportProfile
                 return $item['ProductNumber'] ?? null;
             }
 
-            // Otherwise it's a simple product
-            if (isset($item['ProductVariations']['ProductVariation']['ProductNumber'])) {
-                return (string) $item['ProductVariations']['ProductVariation']['ProductNumber'];
+            // For child products, use ProductId as SKU (unique per variation)
+            if (isset($item['ProductVariations']['ProductVariation']['ProductId'])) {
+                return (string) $item['ProductVariations']['ProductVariation']['ProductId'];
             }
             return null;
         };
@@ -122,15 +122,17 @@ class ImportProductsXml extends ImportProfile
                 // Configurable parents should be visible
                 if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
                     $visible = isset($item['Visible']) ? (string) $item['Visible'] : 'False';
-                    return $visible === 'True' ? 'Catalogus, zoeken' : 'Niet individueel zichtbaar';
+                    return $visible === 'True'
+                        ? (string) __('Catalog, search')
+                        : (string) __('Not visible individually');
                 }
                 // Simple products under configurables should not be individually visible
                 if (isset($item['_configurable_parent_sku'])) {
-                    return 'Niet individueel zichtbaar';
+                    return (string) __('Not visible individually');
                 }
                 // Standalone simple products
                 $visible = isset($item['Visible']) ? (string) $item['Visible'] : 'False';
-                return $visible === 'True' ? 'Catalogus, zoeken' : 'Niet individueel zichtbaar';
+                return $visible === 'True' ? (string) __('Catalog, search') : (string) __('Not visible individually');
             },
             'status' => function ($item) {
                 $deleted = isset($item['IsDeleted']) ? (string) $item['IsDeleted'] : 'True';
@@ -332,9 +334,13 @@ class ImportProductsXml extends ImportProfile
             throw new \Exception("Products XML file not found: {$xmlFilePath}");
         }
 
+        libxml_use_internal_errors(true);
         $xml = simplexml_load_file($xmlFilePath);
         if ($xml === false) {
-            throw new \Exception('Failed to parse products XML file');
+            $errors = libxml_get_errors();
+            libxml_clear_errors();
+            $errorMessages = array_map(fn($e) => trim($e->message), $errors);
+            throw new \Exception('Failed to parse products XML file: ' . implode(', ', $errorMessages));
         }
 
         $items = [];
@@ -344,7 +350,7 @@ class ImportProductsXml extends ImportProfile
             // Determine if product has single or multiple variants
             $hasMultipleVariants = isset($productArray['ProductVariations']['ProductVariation'][0]);
             $hasOneVariant =
-                isset($productArray['ProductVariations']['ProductVariation']['ProductNumber']) && !$hasMultipleVariants;
+                isset($productArray['ProductVariations']['ProductVariation']['ProductId']) && !$hasMultipleVariants;
 
             // Skip products with no variations
             if (!$hasOneVariant && !$hasMultipleVariants) {
@@ -400,7 +406,8 @@ class ImportProductsXml extends ImportProfile
 
     public function createSimpleProduct(array $productArray): array
     {
-        $sku = (string) $productArray['ProductVariations']['ProductVariation']['ProductNumber'];
+        // Use ProductId as SKU (unique per variation)
+        $sku = (string) ($productArray['ProductVariations']['ProductVariation']['ProductId'] ?? '');
         if (empty($sku)) {
             return [];
         }
@@ -425,7 +432,8 @@ class ImportProductsXml extends ImportProfile
 
         // Create a simple product for each variant
         foreach ($productArray['ProductVariations']['ProductVariation'] as $variant) {
-            $sku = (string) $variant['ProductNumber'];
+            // Use ProductId as SKU (unique per variation)
+            $sku = (string) ($variant['ProductId'] ?? '');
             if (empty($sku)) {
                 continue;
             }
