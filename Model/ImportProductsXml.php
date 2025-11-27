@@ -12,7 +12,9 @@ use Ho\Import\Logger\Log;
 use Ho\Import\Model\ImportProfile;
 use Ho\Import\RowModifier\AttributeOptionCreatorFactory;
 use Ho\Import\RowModifier\ItemMapperFactory;
+use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\Product;
+use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCollectionFactory;
 use Magento\Eav\Api\AttributeRepositoryInterface;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
@@ -27,6 +29,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class ImportProductsXml extends ImportProfile
 {
     private array $attributeTypeCache = [];
+    private array $categoryGuidMap = [];
 
     public function __construct(
         ObjectManagerFactory $objectManagerFactory,
@@ -39,6 +42,7 @@ class ImportProductsXml extends ImportProfile
         private readonly Config $config,
         private readonly Filesystem $filesystem,
         private readonly AttributeRepositoryInterface $attributeRepository,
+        private readonly CategoryCollectionFactory $categoryCollectionFactory,
     ) {
         parent::__construct($objectManagerFactory, $stopwatch, $consoleOutput, $log);
     }
@@ -87,7 +91,34 @@ class ImportProductsXml extends ImportProfile
                     ? 'configurable'
                     : 'simple';
             },
-            'categories' => null,
+            'categories' => function ($item) {
+                // Load category mapping if not already loaded
+                if (empty($this->categoryGuidMap)) {
+                    $this->loadCategoryGuidMap();
+                }
+
+                // Extract Groups from the product
+                if (!isset($item['Groups']['ProductGroup'])) {
+                    return null;
+                }
+
+                $groups = $item['Groups']['ProductGroup'];
+
+                // Handle single group (not an array)
+                if (!is_array($groups) || isset($groups['Default'])) {
+                    $groups = [$groups];
+                }
+
+                $categoryNames = [];
+                foreach ($groups as $group) {
+                    $guid = is_array($group) ? ($group[0] ?? null) : $group;
+                    if ($guid && isset($this->categoryGuidMap[$guid])) {
+                        $categoryNames[] = $this->categoryGuidMap[$guid];
+                    }
+                }
+
+                return !empty($categoryNames) ? implode(',', $categoryNames) : null;
+            },
             'product_websites' => 'base',
             'name' => function ($item) {
                 return isset($item['Description']) && !is_array($item['Description'])
@@ -364,8 +395,19 @@ class ImportProductsXml extends ImportProfile
             throw new \Exception("Products XML file not found: {$xmlFilePath}");
         }
 
+        // Read file content
+        $content = file_get_contents($xmlFilePath);
+        if ($content === false) {
+            throw new \Exception('Failed to read products XML file');
+        }
+
+        // Remove UTF-8 BOM if present (EF BB BF)
+        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
+            $content = substr($content, 3);
+        }
+
         libxml_use_internal_errors(true);
-        $xml = simplexml_load_file($xmlFilePath);
+        $xml = simplexml_load_string($content);
         if ($xml === false) {
             $errors = libxml_get_errors();
             libxml_clear_errors();
@@ -557,5 +599,50 @@ class ImportProductsXml extends ImportProfile
             $this->attributeTypeCache[$attributeCode] = null;
             return null;
         }
+    }
+
+    /**
+     * Load category GUID to path mapping from database
+     * Uses the category_code attribute which stores the GroupGuid
+     */
+    private function loadCategoryGuidMap(): void
+    {
+        $collection = $this->categoryCollectionFactory->create();
+        $collection->addAttributeToSelect(['name', 'category_code']);
+        $collection->addAttributeToFilter('category_code', ['notnull' => true]);
+
+        $this->categoryGuidMap = [];
+
+        foreach ($collection as $category) {
+            $guid = $category->getData('category_code');
+            if ($guid && $guid !== 'root_catalog_default_category') {
+                // Get full category path (e.g., "Default Category/Electro/Bruingoed")
+                $pathIds = explode('/', $category->getPath());
+                $pathNames = [];
+
+                foreach ($pathIds as $pathId) {
+                    // Skip root catalog (ID 1)
+                    if ($pathId == 1) {
+                        continue;
+                    }
+                    $pathCategory = $collection->getItemById($pathId);
+                    if (!$pathCategory) {
+                        // Load category if not in collection
+                        $pathCategory = $this->categoryCollectionFactory->create()
+                            ->addAttributeToSelect('name')
+                            ->addFieldToFilter('entity_id', $pathId)
+                            ->getFirstItem();
+                    }
+                    if ($pathCategory && $pathCategory->getName()) {
+                        $pathNames[] = $pathCategory->getName();
+                    }
+                }
+
+                // Store the full category path
+                $this->categoryGuidMap[$guid] = implode('/', $pathNames);
+            }
+        }
+
+        $this->log->info(sprintf('Loaded %d category GUID mappings', count($this->categoryGuidMap)));
     }
 }

@@ -7,6 +7,7 @@
     <module name="ReachDigital_Vendit" setup_version="1.0.0">
         <sequence>
             <module name="Ho_Import"/>
+            <module name="Opengento_CategoryImportExport"/>
         </sequence>
     </module>
 </config>

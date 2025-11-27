@@ -38,7 +38,22 @@ class ImportCustomersXml
         if (!file_exists($xmlFile)) {
             throw new \Exception(sprintf('Customer import XML file not found (%s)', $xmlFile));
         }
-        $xml = simplexml_load_file($xmlFile);
+
+        // Read file content
+        $content = file_get_contents($xmlFile);
+        if ($content === false) {
+            throw new \Exception('Failed to read customers XML file');
+        }
+
+        // Remove UTF-8 BOM if present (EF BB BF)
+        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
+            $content = substr($content, 3);
+        }
+
+        $xml = simplexml_load_string($content);
+        if ($xml === false) {
+            throw new \Exception('Failed to parse customers XML file');
+        }
 
         $customers = [];
         $addresses = [];

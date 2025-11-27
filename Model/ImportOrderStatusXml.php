@@ -50,6 +50,11 @@ class ImportOrderStatusXml
             throw new \Exception('Failed to read order status XML file');
         }
 
+        // Remove UTF-8 BOM if present (EF BB BF)
+        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
+            $content = substr($content, 3);
+        }
+
         $xml = simplexml_load_string($content);
         if ($xml === false) {
             throw new \Exception('Failed to parse order status XML file');
