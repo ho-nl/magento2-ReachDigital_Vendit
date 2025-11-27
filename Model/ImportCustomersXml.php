@@ -10,14 +10,15 @@ namespace ReachDigital\Vendit\Model;
 
 use Magento\Customer\Api\GroupManagementInterface;
 use Magento\CustomerImportExport\Model\Import\Address;
+use Magento\Directory\Model\CountryFactory;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\Write;
 use Magento\ImportExport\Model\Import;
-use Magento\ImportExport\Model\ImportFactory;
 use Magento\ImportExport\Model\Import\Adapter;
+use Magento\ImportExport\Model\ImportFactory;
 use Magento\Store\Model\StoreManagerInterface;
-use Zend_Locale_Data;
 
 class ImportCustomersXml
 {
@@ -28,10 +29,11 @@ class ImportCustomersXml
         private readonly Address $importAddress,
         private readonly GroupManagementInterface $groupManagement,
         private readonly StoreManagerInterface $storeManager,
+        private readonly CountryFactory $countryFactory,
     ) {
     }
 
-    public function execute(): void
+    public function run(): int
     {
         $xmlFile = $this->config->getCustomerImportFilePath();
 
@@ -59,17 +61,23 @@ class ImportCustomersXml
         $addresses = [];
         foreach ($xml->Customers->Customer as $customerNode) {
             $customerData = $this->mapCustomer($customerNode);
+
+            // Skip customers without email (required field in Magento)
+            if (empty($customerData['email'])) {
+                continue;
+            }
+
             $customers[] = $customerData;
 
             // Collect addresses for this customer
             if (isset($customerNode->Addresses)) {
                 foreach ($customerNode->Addresses->Address as $addressNode) {
-                    $adressData = $this->mapAddress($customerData['email'], $addressNode);
-                    if (is_null($adressData)) {
+                    $addressData = $this->mapAddress($customerData['email'], $addressNode);
+                    if (is_null($addressData)) {
                         continue;
                     }
 
-                    $addresses[] = $adressData;
+                    $addresses[] = $addressData;
                 }
             }
         }
@@ -88,6 +96,8 @@ class ImportCustomersXml
         } catch (\Exception $e) {
             throw new \Exception('Customer address import failed: ' . $e->getMessage());
         }
+
+        return Cli::RETURN_SUCCESS;
     }
 
     public function generateCsv($rows, $filename): string
@@ -201,6 +211,7 @@ class ImportCustomersXml
             'firstname' => $firstname,
             'middlename' => $middlename,
             'lastname' => $lastname,
+            'vendit_customer_number' => (string) $customerNode->CustomerNumber,
         ];
     }
 
@@ -242,13 +253,20 @@ class ImportCustomersXml
 
     private function getCountryCode(string $countryName): string
     {
-        $locale = 'nl_NL';
-        $countries = Zend_Locale_Data::getList($locale, 'territory');
+        // Get all countries
+        $country = $this->countryFactory->create();
+        $countries = $country->getCollection()->toOptionArray();
 
-        if (!array_search($countryName, $countries)) {
-            throw new \Exception(sprintf('Country code not found for country "%s"', $countryName));
+        // Search for country by name
+        foreach ($countries as $countryOption) {
+            if (
+                isset($countryOption['label']) &&
+                strtolower((string) $countryOption['label']) === strtolower($countryName)
+            ) {
+                return (string) $countryOption['value'];
+            }
         }
 
-        return array_search($countryName, $countries);
+        throw new \Exception(sprintf('Country code not found for country "%s"', $countryName));
     }
 }
