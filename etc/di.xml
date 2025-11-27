@@ -22,6 +22,11 @@
         </arguments>
     </type>
 
+    <type name="Magento\CatalogUrlRewrite\Observer\AfterImportDataObserver">
+        <plugin name="reachDigitalVenditSkipUrlGenerationAtImport"
+                type="ReachDigital\Vendit\Plugin\SkipUrlGenerationAtImport"/>
+    </type>
+
     <!-- Custom logger for order status imports -->
     <type name="ReachDigital\Vendit\Logger\OrderStatusHandler">
         <arguments>

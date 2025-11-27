@@ -48,6 +48,8 @@ class ImportStockXml extends ImportProfile
             'entity' => Product::ENTITY,
             'validation_strategy' => ProcessingErrorAggregatorInterface::VALIDATION_STRATEGY_STOP_ON_ERROR,
             'allowed_error_count' => 0,
+            // Never generate new URLs when importing stock
+            'skip_url_generation' => true,
         ];
     }
 
