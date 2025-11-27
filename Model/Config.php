@@ -127,11 +127,6 @@ class Config
         );
     }
 
-    public function getCustomerExportFilePath(): string
-    {
-        return $this->getExportFilePath(self::TYPE_CUSTOMER);
-    }
-
     public function getOrderExportFilePath(): string
     {
         return $this->getExportFilePath(self::TYPE_ORDER);
