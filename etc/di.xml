@@ -27,6 +27,12 @@
                 type="ReachDigital\Vendit\Plugin\SkipUrlGenerationAtImport"/>
     </type>
 
+    <!-- Cleanup unprocessed import bunches -->
+    <type name="Magento\ImportExport\Model\ResourceModel\Import\Data">
+        <plugin name="reachDigitalVenditCleanupUnprocessedImportDataBunches"
+                type="ReachDigital\Vendit\Plugin\CleanupUnprocessedImportDataBunches"/>
+    </type>
+
     <!-- Custom logger for order status imports -->
     <type name="ReachDigital\Vendit\Logger\OrderStatusHandler">
         <arguments>
