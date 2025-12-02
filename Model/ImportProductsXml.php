@@ -30,6 +30,7 @@ class ImportProductsXml extends ImportProfile
 {
     private array $attributeTypeCache = [];
     private ?array $categoryGuidMap = null;
+    private array $copiedImageFiles = [];
 
     public function __construct(
         ObjectManagerFactory $objectManagerFactory,
@@ -57,10 +58,25 @@ class ImportProductsXml extends ImportProfile
         ];
     }
 
+    public function run()
+    {
+        $result = parent::run();
+
+        // Clean up source images only after successful import
+        if ($result === \Magento\Framework\Console\Cli::RETURN_SUCCESS && !$this->getErrors()) {
+            $this->cleanupSourceImages();
+        }
+
+        return $result;
+    }
+
     public function getItems(): array
     {
         // Load all products from single XML file
         $items = $this->loadProducts();
+
+        // Copy images to pub/media/import directory before processing
+        $this->copyImagesToImportDirectory();
 
         // Get configured size attribute
         $sizeAttribute = $this->config->getSizeAttribute();
@@ -183,6 +199,18 @@ class ImportProductsXml extends ImportProfile
             'use_config_manage_stock' => '1',
             'use_config_qty_increments' => '1',
             'use_config_enable_qty_inc' => '1',
+            'base_image' => function ($item) {
+                return $this->getImageFromVariation($item, 0);
+            },
+            'small_image' => function ($item) {
+                return $this->getImageFromVariation($item, 0);
+            },
+            'thumbnail_image' => function ($item) {
+                return $this->getImageFromVariation($item, 0);
+            },
+            'additional_images' => function ($item) {
+                return $this->getAdditionalImagesFromVariation($item);
+            },
             'meta_title' => function ($item) {
                 if (isset($item['PageTitle']) && !is_array($item['PageTitle'])) {
                     $title = (string) $item['PageTitle'];
@@ -596,6 +624,171 @@ class ImportProductsXml extends ImportProfile
             $this->attributeTypeCache[$attributeCode] = null;
             return null;
         }
+    }
+
+    /**
+     * Get image from product variation by index
+     */
+    private function getImageFromVariation(array $item, int $index): ?string
+    {
+        // Skip for configurable parents
+        if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
+            return null;
+        }
+
+        $images = $item['ProductVariations']['ProductVariation']['Images']['Image'] ?? null;
+
+        if (empty($images)) {
+            return null;
+        }
+
+        // If it's a single image (string), return it if index is 0
+        if (is_string($images)) {
+            return $index === 0 ? $this->buildImagePath($images) : null;
+        }
+
+        // If it's an array of images, return the one at the specified index
+        if (is_array($images) && isset($images[$index])) {
+            return $this->buildImagePath($images[$index]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get additional images from product variation (all images except the first one)
+     */
+    private function getAdditionalImagesFromVariation(array $item): ?string
+    {
+        // Skip for configurable parents
+        if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
+            return null;
+        }
+
+        $images = $item['ProductVariations']['ProductVariation']['Images']['Image'] ?? null;
+
+        if (empty($images)) {
+            return null;
+        }
+
+        $additionalImages = [];
+
+        // If it's a single image, there are no additional images
+        if (is_string($images)) {
+            return null;
+        }
+
+        // If it's an array of images, get all images starting from index 1
+        if (is_array($images)) {
+            for ($i = 1; $i < count($images); $i++) {
+                if (isset($images[$i])) {
+                    $additionalImages[] = $this->buildImagePath($images[$i]);
+                }
+            }
+        }
+
+        return !empty($additionalImages) ? implode(',', $additionalImages) : null;
+    }
+
+    /**
+     * Build full image path using configured image directory
+     */
+    private function buildImagePath(string $filename): string
+    {
+        $imagePath = $this->config->getImagePath();
+
+        if (empty($imagePath)) {
+            return $filename;
+        }
+
+        return rtrim($imagePath, '/') . '/' . ltrim($filename, '/');
+    }
+
+    /**
+     * Copy images from source directory to pub/media/import directory
+     * This ensures images are available for Magento's import process
+     */
+    private function copyImagesToImportDirectory(): void
+    {
+        $imagePath = $this->config->getImagePath();
+        if (empty($imagePath)) {
+            return;
+        }
+
+        // Source: var/vendit/import/images/
+        $varDirectory = $this->filesystem->getDirectoryWrite(AppDirectoryList::VAR_DIR);
+        $sourceDir = $varDirectory->getAbsolutePath(trim($imagePath, '/'));
+
+        // Destination: pub/media/import/vendit/import/images/
+        $mediaDirectory = $this->filesystem->getDirectoryWrite(AppDirectoryList::MEDIA);
+        $destDir = $mediaDirectory->getAbsolutePath('import/' . trim($imagePath, '/'));
+
+        // Create destination directory if it doesn't exist
+        if (!$mediaDirectory->isDirectory('import/' . trim($imagePath, '/'))) {
+            $mediaDirectory->create('import/' . trim($imagePath, '/'));
+        }
+
+        // Check if source directory exists
+        if (!$varDirectory->isDirectory(trim($imagePath, '/'))) {
+            $this->log->warning("Source image directory does not exist: {$sourceDir}");
+            return;
+        }
+
+        // Copy all image files
+        $imageFiles = glob($sourceDir . '/*.{jpg,jpeg,png,gif,JPG,JPEG,PNG,GIF}', GLOB_BRACE);
+        $copiedCount = 0;
+
+        foreach ($imageFiles as $sourceFile) {
+            $filename = basename($sourceFile);
+            $sourcePath = trim($imagePath, '/') . '/' . $filename;
+            $destPath = 'import/' . trim($imagePath, '/') . '/' . $filename;
+
+            // Copy file
+            try {
+                $content = $varDirectory->readFile($sourcePath);
+                $mediaDirectory->writeFile($destPath, $content);
+                $this->copiedImageFiles[] = $sourcePath;
+                $copiedCount++;
+            } catch (\Exception $e) {
+                $this->log->error("Failed to copy image {$filename}: " . $e->getMessage());
+            }
+        }
+
+        if ($copiedCount > 0) {
+            $this->log->info("Copied {$copiedCount} image file(s) to import directory");
+        }
+    }
+
+    /**
+     * Clean up source images after successful import
+     * This removes the image files from var/vendit/import/images/ to save disk space
+     */
+    private function cleanupSourceImages(): void
+    {
+        if (empty($this->copiedImageFiles)) {
+            return;
+        }
+
+        $varDirectory = $this->filesystem->getDirectoryWrite(AppDirectoryList::VAR_DIR);
+        $deletedCount = 0;
+
+        foreach ($this->copiedImageFiles as $sourcePath) {
+            try {
+                if ($varDirectory->isFile($sourcePath)) {
+                    $varDirectory->delete($sourcePath);
+                    $deletedCount++;
+                }
+            } catch (\Exception $e) {
+                $this->log->error("Failed to delete source image {$sourcePath}: " . $e->getMessage());
+            }
+        }
+
+        if ($deletedCount > 0) {
+            $this->log->info("Cleaned up {$deletedCount} source image file(s) after successful import");
+        }
+
+        // Clear the tracking array
+        $this->copiedImageFiles = [];
     }
 
     /**

@@ -273,4 +273,9 @@ class Config
             return [];
         }
     }
+
+    public function getImagePath(): ?string
+    {
+        return $this->scopeConfig->getValue(self::DIR_MAPPING_CONFIG_PATH . '/import/image_path');
+    }
 }
