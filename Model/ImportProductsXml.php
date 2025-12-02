@@ -828,7 +828,9 @@ class ImportProductsXml extends ImportProfile
                             ->getFirstItem();
                     }
                     if ($pathCategory && $pathCategory->getName()) {
-                        $pathNames[] = $pathCategory->getName();
+                        // Escape forward slashes in category names to prevent them from being treated as path separators
+                        $categoryName = str_replace('/', '\/', $pathCategory->getName());
+                        $pathNames[] = $categoryName;
                     }
                 }
 
