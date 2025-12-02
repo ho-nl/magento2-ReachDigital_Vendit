@@ -29,7 +29,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class ImportProductsXml extends ImportProfile
 {
     private array $attributeTypeCache = [];
-    private array $categoryGuidMap = [];
+    private ?array $categoryGuidMap = null;
 
     public function __construct(
         ObjectManagerFactory $objectManagerFactory,
@@ -92,10 +92,7 @@ class ImportProductsXml extends ImportProfile
                     : 'simple';
             },
             'categories' => function ($item) {
-                // Load category mapping if not already loaded
-                if (empty($this->categoryGuidMap)) {
-                    $this->loadCategoryGuidMap();
-                }
+                $categoryMap = $this->getCategoryGuidMap();
 
                 // Extract Groups from the product
                 if (!isset($item['Groups']['ProductGroup'])) {
@@ -111,9 +108,9 @@ class ImportProductsXml extends ImportProfile
 
                 $categoryNames = [];
                 foreach ($groups as $group) {
-                    $guid = is_array($group) ? ($group[0] ?? null) : $group;
-                    if ($guid && isset($this->categoryGuidMap[$guid])) {
-                        $categoryNames[] = $this->categoryGuidMap[$guid];
+                    $guid = is_array($group) ? $group[0] ?? null : $group;
+                    if ($guid && isset($categoryMap[$guid])) {
+                        $categoryNames[] = $categoryMap[$guid];
                     }
                 }
 
@@ -605,14 +602,17 @@ class ImportProductsXml extends ImportProfile
      * Load category GUID to path mapping from database
      * Uses the category_code attribute which stores the GroupGuid
      */
-    private function loadCategoryGuidMap(): void
+    private function getCategoryGuidMap(): ?array
     {
+        if (!is_null($this->categoryGuidMap)) {
+            return $this->categoryGuidMap;
+        }
+
         $collection = $this->categoryCollectionFactory->create();
         $collection->addAttributeToSelect(['name', 'category_code']);
         $collection->addAttributeToFilter('category_code', ['notnull' => true]);
 
-        $this->categoryGuidMap = [];
-
+        $guidMap = [];
         foreach ($collection as $category) {
             $guid = $category->getData('category_code');
             if ($guid && $guid !== 'root_catalog_default_category') {
@@ -628,7 +628,8 @@ class ImportProductsXml extends ImportProfile
                     $pathCategory = $collection->getItemById($pathId);
                     if (!$pathCategory) {
                         // Load category if not in collection
-                        $pathCategory = $this->categoryCollectionFactory->create()
+                        $pathCategory = $this->categoryCollectionFactory
+                            ->create()
                             ->addAttributeToSelect('name')
                             ->addFieldToFilter('entity_id', $pathId)
                             ->getFirstItem();
@@ -639,10 +640,12 @@ class ImportProductsXml extends ImportProfile
                 }
 
                 // Store the full category path
-                $this->categoryGuidMap[$guid] = implode('/', $pathNames);
+                $guidMap[$guid] = implode('/', $pathNames);
             }
         }
 
-        $this->log->info(sprintf('Loaded %d category GUID mappings', count($this->categoryGuidMap)));
+        $this->categoryGuidMap = $guidMap;
+
+        return $this->categoryGuidMap;
     }
 }
