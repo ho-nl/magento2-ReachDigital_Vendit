@@ -53,14 +53,6 @@
                 </group>
                 <group id="export" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Export</label>
-                    <field id="customer_path" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Customers File Path</label>
-                    </field>
-                    <field id="customer_file" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
-                        <label>Customers File</label>
-                        <comment><![CDATA[Where <code>%s</code> is the timestamp and/or customer number.<br/>
-                        For example: Customer_%s.xml]]></comment>
-                    </field>
                     <field id="order_path" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Orders File Path</label>
                     </field>
