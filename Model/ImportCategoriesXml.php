@@ -20,10 +20,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class ImportCategoriesXml
 {
-    private bool $dryRun = true;
-    private array $categoryTree = [];
-    private array $existingCategories = [];
-    private int $importedCount = 0;
+    private ?array $categoryTree = null;
 
     public function __construct(
         private readonly Stopwatch $stopwatch,
@@ -37,33 +34,14 @@ class ImportCategoriesXml
     ) {
     }
 
-    public function setDryRun(bool $dryRun): void
-    {
-        $this->dryRun = $dryRun;
-    }
-
-    public function isDryRun(): bool
-    {
-        return $this->dryRun;
-    }
-
-    public function getCategoryTree(): array
-    {
-        return $this->categoryTree;
-    }
-
     public function run(): int
     {
-        if ($this->dryRun) {
-            $this->log->info('DRY RUN MODE - No categories will be imported');
-            return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
-        }
-
         $this->stopwatch->start('import');
         $this->consoleOutput->writeln('Getting item data');
 
+        $categoryTree = $this->getCategoryTree();
         // Flatten the tree and convert to OpenGento format
-        $flatCategories = $this->flattenCategoryTree($this->categoryTree);
+        $flatCategories = $this->flattenCategoryTree($categoryTree);
         $data = $this->convertToOpenGentoFormat($flatCategories);
 
         $this->consoleOutput->writeln('Mapping item information');
@@ -74,10 +52,11 @@ class ImportCategoriesXml
         $data = $this->sortByDependency($data);
 
         // Use OpenGento importer - import one by one to handle dependencies
+        $importedCount = 0;
         try {
             foreach ($data as $row) {
                 $this->openGentoImporter->execute([$row]);
-                $this->importedCount++;
+                $importedCount++;
             }
         } catch (\Exception $e) {
             $this->log->error('Category import failed: ' . $e->getMessage());
@@ -87,10 +66,10 @@ class ImportCategoriesXml
         $event = $this->stopwatch->stop('import');
         $message = sprintf(
             '%d items processed in %s sec, %s items / sec (%smb used)',
-            $this->importedCount,
+            $importedCount,
             round($event->getDuration() / 1000, 1),
-            $this->importedCount > 0 ? round($this->importedCount / ($event->getDuration() / 1000), 1) : 0,
-            round($event->getMemory() / 1024 / 1024, 1)
+            $importedCount > 0 ? round($importedCount / ($event->getDuration() / 1000), 1) : 0,
+            round($event->getMemory() / 1024 / 1024, 1),
         );
 
         $this->consoleOutput->writeln($message);
@@ -115,7 +94,7 @@ class ImportCategoriesXml
 
             foreach ($remaining as $key => $category) {
                 // If parent_code is the root category, add it immediately
-                if ($category['parent_code'] === 'root_catalog_default_category') {
+                if (isset($category['parent_code']) && $category['parent_code'] === 'root_catalog_default_category') {
                     $sorted[] = $category;
                     unset($remaining[$key]);
                     $addedThisRound = true;
@@ -125,7 +104,7 @@ class ImportCategoriesXml
                 // Check if parent already in sorted
                 $parentExists = false;
                 foreach ($sorted as $sortedCat) {
-                    if ($sortedCat['category_code'] === $category['parent_code']) {
+                    if (isset($category['parent_code']) && $sortedCat['category_code'] === $category['parent_code']) {
                         $parentExists = true;
                         break;
                     }
@@ -158,7 +137,6 @@ class ImportCategoriesXml
     {
         $data = [];
         $defaultStore = $this->storeManager->getDefaultStoreView();
-        $rootCategoryId = $defaultStore->getRootCategoryId();
 
         foreach ($flatCategories as $category) {
             $row = [
@@ -170,7 +148,10 @@ class ImportCategoriesXml
             ];
 
             // Add parent if not root level
-            if (!empty($category['parent_guid']) && $category['parent_guid'] !== '00000000-0000-0000-0000-000000000000') {
+            if (
+                !empty($category['parent_guid']) &&
+                $category['parent_guid'] !== '00000000-0000-0000-0000-000000000000'
+            ) {
                 $row['parent_code'] = $category['parent_guid'];
             } else {
                 // Root level categories go under the store's root category
@@ -191,7 +172,7 @@ class ImportCategoriesXml
             if (!empty($category['meta_description'])) {
                 $row['meta_description'] = $category['meta_description'];
             }
-            if (!empty($category['url_key']) && !isset($this->existingCategories[$category['path']])) {
+            if (!empty($category['url_key'])) {
                 $row['url_key'] = $category['url_key'];
             }
 
@@ -201,8 +182,12 @@ class ImportCategoriesXml
         return $data;
     }
 
-    public function loadCategories(): array
+    public function getCategoryTree(): array
     {
+        if (!is_null($this->categoryTree)) {
+            return $this->categoryTree;
+        }
+
         $xmlFilePath = $this->config->getCategoryImportFilePath();
         if (!file_exists($xmlFilePath)) {
             $this->log->error("Categories XML file not found: {$xmlFilePath}");
@@ -241,62 +226,9 @@ class ImportCategoriesXml
             }
         }
 
-        // Load existing Magento categories for comparison
-        $this->loadExistingCategories();
-
-        // Store tree for later use
         $this->categoryTree = $tree;
 
-        return $tree;
-    }
-
-    private function loadExistingCategories(): void
-    {
-        $collection = $this->categoryCollectionFactory->create();
-        $collection->addAttributeToSelect(['name', 'url_key', 'position', 'is_active']);
-
-        // First pass: build a map of category ID to category for lookups
-        $categoriesById = [];
-        foreach ($collection as $category) {
-            $categoriesById[$category->getId()] = $category;
-        }
-
-        // Second pass: build paths
-        $this->existingCategories = [];
-        foreach ($collection as $category) {
-            $pathIds = explode('/', $category->getPath());
-
-            // Skip only the root catalog (ID 1, level 0)
-            if (count($pathIds) < 2) {
-                continue;
-            }
-
-            // Build path from category names, skipping only root catalog (ID 1)
-            $pathNames = [];
-            foreach ($pathIds as $pathId) {
-                if ($pathId == 1) {
-                    // Skip root catalog
-                    continue;
-                }
-                if (isset($categoriesById[$pathId])) {
-                    $pathNames[] = $categoriesById[$pathId]->getName();
-                }
-            }
-
-            if (empty($pathNames)) {
-                continue;
-            }
-
-            $categoryPath = implode('/', $pathNames);
-            $this->existingCategories[$categoryPath] = [
-                'id' => $category->getId(),
-                'name' => $category->getName(),
-                'path' => $categoryPath,
-                'url_key' => $category->getUrlKey(),
-                'position' => (int) $category->getPosition(),
-                'is_active' => (bool) $category->getIsActive(),
-            ];
-        }
+        return $this->categoryTree;
     }
 
     private function parseGroup(\SimpleXMLElement $groupNode, string $parentPath = ''): ?array
@@ -398,105 +330,4 @@ class ImportCategoriesXml
         $stream->unlock();
     }
 
-    /**
-     * Display category tree in CLI format with comparison indicators
-     */
-    public function displayCategoryTree(array $tree, int $level = 0): string
-    {
-        $output = '';
-        foreach ($tree as $category) {
-            $indent = str_repeat('  ', $level);
-            $path = $category['path'];
-            $status = $this->getCategoryStatus($path, $category);
-
-            $output .= $indent . '    ├─ ';
-
-            // Add color coding based on status
-            switch ($status['type']) {
-                case 'new':
-                    $output .= '<fg=green>[NEW]</> ' . $category['name'];
-                    break;
-                case 'changed':
-                    $output .= '<fg=yellow>[MODIFIED]</> ' . $category['name'];
-                    $output .= ' ' . $status['changes'];
-                    break;
-                case 'unchanged':
-                    $output .= $category['name'];
-                    break;
-            }
-
-            $output .= ' (position: ' . $category['position'] . ')';
-            $output .= "\n";
-
-            if (!empty($category['children'])) {
-                $output .= $this->displayCategoryTree($category['children'], $level + 1);
-            }
-        }
-        return $output;
-    }
-
-    /**
-     * Get category status by comparing with existing categories
-     */
-    private function getCategoryStatus(string $path, array $category): array
-    {
-        if (!isset($this->existingCategories[$path])) {
-            return ['type' => 'new'];
-        }
-
-        $existing = $this->existingCategories[$path];
-        $changes = [];
-
-        if ($category['position'] != $existing['position']) {
-            $changes[] = "pos: {$existing['position']} → {$category['position']}";
-        }
-
-        // Don't compare URL keys - we preserve existing ones and don't update them
-
-        if (!empty($changes)) {
-            return [
-                'type' => 'changed',
-                'changes' => '<fg=cyan>(' . implode(', ', $changes) . ')</>',
-            ];
-        }
-
-        return ['type' => 'unchanged'];
-    }
-
-    /**
-     * Get categories that exist in Magento but not in XML (will be orphaned)
-     */
-    public function getOrphanedCategories(array $tree): array
-    {
-        $xmlPaths = $this->collectAllPaths($tree);
-        $orphaned = [];
-
-        foreach ($this->existingCategories as $path => $existing) {
-            // Exclude Default Category (the root under which all categories are imported)
-            if ($path === 'Default Category') {
-                continue;
-            }
-
-            if (!in_array($path, $xmlPaths)) {
-                $orphaned[] = $existing;
-            }
-        }
-
-        return $orphaned;
-    }
-
-    /**
-     * Recursively collect all category paths from tree
-     */
-    private function collectAllPaths(array $tree): array
-    {
-        $paths = [];
-        foreach ($tree as $category) {
-            $paths[] = $category['path'];
-            if (!empty($category['children'])) {
-                $paths = array_merge($paths, $this->collectAllPaths($category['children']));
-            }
-        }
-        return $paths;
-    }
 }

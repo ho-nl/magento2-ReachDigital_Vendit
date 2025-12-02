@@ -92,7 +92,7 @@ class ProcessImportFiles
      */
     private function processFile(string $filePath, string $type): void
     {
-        $configuredPath = $this->getConfiguredImportPath($type);
+        $configuredPath = $this->getConfiguredImportPath($type, $filePath);
 
         // Remove existing file if present
         if ($this->ioFile->fileExists($configuredPath)) {
@@ -171,12 +171,18 @@ class ProcessImportFiles
     /**
      * Get configured import file path (where importer expects the file)
      */
-    private function getConfiguredImportPath(string $type): string
+    private function getConfiguredImportPath(string $type, string $sourceFile = ''): string
     {
         $directory = $this->getImportDirectory($type);
         $prefix = $this->config->getFilePrefix($type);
 
-        // For temporary processing, use a generic filename with the prefix
+        // Use source filename to create unique temp file
+        if (!empty($sourceFile)) {
+            $basename = basename($sourceFile);
+            return $directory . DIRECTORY_SEPARATOR . $basename;
+        }
+
+        // Fallback to generic filename with the prefix
         return $directory . DIRECTORY_SEPARATOR . $prefix . '.xml';
     }
 
