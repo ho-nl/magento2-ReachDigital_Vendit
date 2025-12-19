@@ -40,8 +40,8 @@ class ImportCategories extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (!$this->config->isEnabled()) {
-            $output->writeln('<error>Vendit integration is disabled</error>');
+        if (!$this->config->isCategoryImportEnabled()) {
+            $output->writeln('<error>Category import is disabled</error>');
             return Cli::RETURN_FAILURE;
         }
 

@@ -39,8 +39,8 @@ class ImportOrderStatus extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (!$this->config->isEnabled()) {
-            $output->writeln('<error>Vendit integration is disabled</error>');
+        if (!$this->config->isOrderUpdateImportEnabled()) {
+            $output->writeln('<error>Order update import is disabled</error>');
             return Cli::RETURN_FAILURE;
         }
 

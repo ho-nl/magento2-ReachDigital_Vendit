@@ -27,7 +27,7 @@ class ProcessProductImport
 
     public function execute(): void
     {
-        if (!$this->config->isEnabled()) {
+        if (!$this->config->isProductImportEnabled()) {
             return;
         }
 

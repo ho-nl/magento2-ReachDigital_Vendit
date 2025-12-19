@@ -39,8 +39,8 @@ class ImportProducts extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (!$this->config->isEnabled()) {
-            $output->writeln('<error>Vendit integration is disabled</error>');
+        if (!$this->config->isProductImportEnabled()) {
+            $output->writeln('<error>Product import is disabled</error>');
             return Cli::RETURN_FAILURE;
         }
 

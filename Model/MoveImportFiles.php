@@ -28,16 +28,21 @@ class MoveImportFiles
     {
         $movedFiles = [];
 
-        // Define all import types
+        // Define all import types with their enabled check methods
         $importTypes = [
-            Config::TYPE_PRODUCT,
-            Config::TYPE_STOCK,
-            Config::TYPE_CATEGORY,
-            Config::TYPE_CUSTOMER,
-            Config::TYPE_ORDER,
+            Config::TYPE_PRODUCT => 'isProductImportEnabled',
+            Config::TYPE_STOCK => 'isStockImportEnabled',
+            Config::TYPE_CATEGORY => 'isCategoryImportEnabled',
+            Config::TYPE_CUSTOMER => 'isCustomerImportEnabled',
+            Config::TYPE_ORDER => 'isOrderUpdateImportEnabled',
         ];
 
-        foreach ($importTypes as $type) {
+        foreach ($importTypes as $type => $enabledMethod) {
+            // Only move files if the integration is enabled
+            if (!$this->config->$enabledMethod()) {
+                continue;
+            }
+
             $moved = $this->moveImportFiles($type);
             $movedFiles = array_merge($movedFiles, $moved);
         }

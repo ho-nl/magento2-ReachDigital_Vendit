@@ -27,7 +27,7 @@ class ProcessOrderImport
 
     public function execute(): void
     {
-        if (!$this->config->isEnabled()) {
+        if (!$this->config->isOrderUpdateImportEnabled()) {
             return;
         }
 

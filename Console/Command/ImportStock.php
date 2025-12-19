@@ -39,8 +39,8 @@ class ImportStock extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (!$this->config->isEnabled()) {
-            $output->writeln('<error>Vendit integration is disabled</error>');
+        if (!$this->config->isStockImportEnabled()) {
+            $output->writeln('<error>Stock import is disabled</error>');
             return Cli::RETURN_FAILURE;
         }
 
