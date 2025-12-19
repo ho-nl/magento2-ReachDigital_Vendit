@@ -21,11 +21,16 @@ class ProcessOrderImport
         private readonly ProcessImportFiles $processImportFiles,
         private readonly State $state,
         private readonly LoggerInterface $logger,
+        private readonly Config $config,
     ) {
     }
 
     public function execute(): void
     {
+        if (!$this->config->isEnabled()) {
+            return;
+        }
+
         try {
             $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_CRONTAB);
         } catch (\Magento\Framework\Exception\LocalizedException $e) {

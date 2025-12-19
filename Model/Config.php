@@ -15,6 +15,7 @@ use Magento\Framework\Serialize\SerializerInterface;
 
 class Config
 {
+    const XML_PATH_ENABLED = 'vendit/general/enabled';
     const DIR_MAPPING_CONFIG_PATH = 'vendit/directory_mapping';
 
     const XML_PATH_ATTRIBUTE_MAPPING = 'vendit_mapping/attribute_mapping/attributes';
@@ -39,6 +40,11 @@ class Config
         private readonly ScopeConfigInterface $scopeConfig,
         private readonly SerializerInterface $serializer,
     ) {
+    }
+
+    public function isEnabled(): bool
+    {
+        return (bool) $this->scopeConfig->getValue(self::XML_PATH_ENABLED);
     }
 
     public function getImportFilesDirectory(): string

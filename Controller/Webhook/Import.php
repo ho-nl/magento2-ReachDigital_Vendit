@@ -16,6 +16,7 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\Result\Json;
 use Psr\Log\LoggerInterface;
 use ReachDigital\Vendit\Model\MoveImportFiles;
+use ReachDigital\Vendit\Model\Config;
 
 class Import implements HttpPostActionInterface, CsrfAwareActionInterface
 {
@@ -23,12 +24,20 @@ class Import implements HttpPostActionInterface, CsrfAwareActionInterface
         private readonly JsonFactory $jsonFactory,
         private readonly MoveImportFiles $moveImportFiles,
         private readonly LoggerInterface $logger,
+        private readonly Config $config,
     ) {
     }
 
     public function execute(): Json
     {
         $result = $this->jsonFactory->create();
+
+        if (!$this->config->isEnabled()) {
+            return $result->setHttpResponseCode(503)->setData([
+                'success' => false,
+                'message' => 'Vendit integration is disabled',
+            ]);
+        }
 
         try {
             $movedFiles = $this->moveImportFiles->execute();

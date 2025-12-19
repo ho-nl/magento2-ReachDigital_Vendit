@@ -22,7 +22,8 @@ class ImportStock extends Command
     public function __construct(
         private readonly MoveImportFiles $moveImportFiles,
         private readonly ProcessImportFiles $processImportFiles,
-        private readonly State $state
+        private readonly State $state,
+        private readonly Config $config,
     ) {
         parent::__construct();
     }
@@ -38,6 +39,11 @@ class ImportStock extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if (!$this->config->isEnabled()) {
+            $output->writeln('<error>Vendit integration is disabled</error>');
+            return Cli::RETURN_FAILURE;
+        }
+
         try {
             $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_ADMINHTML);
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
