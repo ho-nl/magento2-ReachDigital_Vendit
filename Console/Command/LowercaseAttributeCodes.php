@@ -30,7 +30,7 @@ class LowercaseAttributeCodes extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:lowercase-attribute-codes')
+        $this->setName('vendit:attribute-codes:lowercase')
             ->setDescription('Transform product attribute codes to lowercase')
             ->addOption(
                 self::OPTION_FORCE,

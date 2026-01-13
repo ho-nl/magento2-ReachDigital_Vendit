@@ -32,7 +32,7 @@ class ImportCategories extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:import:categories')
+        $this->setName('vendit:categories:import')
             ->setDescription('Import categories from XML file supplied by Vendit');
 
         parent::configure();

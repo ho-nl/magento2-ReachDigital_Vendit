@@ -30,7 +30,7 @@ class ImportProducts extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:import:products')->setDescription(
+        $this->setName('vendit:products:import')->setDescription(
             'Import all products from XML file supplied by Vendit'
         );
 

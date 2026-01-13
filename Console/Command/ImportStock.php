@@ -30,7 +30,7 @@ class ImportStock extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:import:stock')->setDescription(
+        $this->setName('vendit:stock:import')->setDescription(
             'Import stock data from XML file supplied by Vendit'
         );
 

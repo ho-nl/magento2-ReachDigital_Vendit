@@ -27,7 +27,7 @@ class ExportOrders extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:export:orders')->setDescription('Export all orders to XML');
+        $this->setName('vendit:orders:export')->setDescription('Export all orders to XML');
 
         parent::configure();
     }

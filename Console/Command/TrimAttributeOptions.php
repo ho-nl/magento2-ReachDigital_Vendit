@@ -29,7 +29,7 @@ class TrimAttributeOptions extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:trim-attribute-options')
+        $this->setName('vendit:attribute-options:trim')
             ->setDescription('Trim whitespace from attribute option labels')
             ->addArgument('attribute_code', InputArgument::REQUIRED, 'Attribute code');
 

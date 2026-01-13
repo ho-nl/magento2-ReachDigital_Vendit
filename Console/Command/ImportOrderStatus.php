@@ -30,7 +30,7 @@ class ImportOrderStatus extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:import:orderstatus')->setDescription(
+        $this->setName('vendit:orderstatus:import')->setDescription(
             'Import order status updates from XML file supplied by Vendit',
         );
 
