@@ -12,6 +12,7 @@ use Ho\Import\Logger\Log;
 use Ho\Import\Model\ImportProfile;
 use Ho\Import\RowModifier\AttributeOptionCreatorFactory;
 use Ho\Import\RowModifier\ItemMapperFactory;
+use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCollectionFactory;
@@ -20,6 +21,7 @@ use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem;
+use Magento\Framework\Registry;
 use Magento\ImportExport\Model\Import;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
 use ReachDigital\Vendit\Model\RowModifier\MultiSelectAttributeOptionCreatorFactory;
@@ -31,6 +33,7 @@ class ImportProductsXml extends ImportProfile
     private array $attributeTypeCache = [];
     private ?array $categoryGuidMap = null;
     private array $copiedImageFiles = [];
+    private array $productsToDelete = [];
 
     public function __construct(
         ObjectManagerFactory $objectManagerFactory,
@@ -44,6 +47,8 @@ class ImportProductsXml extends ImportProfile
         private readonly Filesystem $filesystem,
         private readonly AttributeRepositoryInterface $attributeRepository,
         private readonly CategoryCollectionFactory $categoryCollectionFactory,
+        private readonly ProductRepositoryInterface $productRepository,
+        private readonly Registry $registry,
     ) {
         parent::__construct($objectManagerFactory, $stopwatch, $consoleOutput, $log);
     }
@@ -65,6 +70,9 @@ class ImportProductsXml extends ImportProfile
         // Clean up source images only after successful import
         if ($result === \Magento\Framework\Console\Cli::RETURN_SUCCESS && !$this->getErrors()) {
             $this->cleanupSourceImages();
+
+            // Delete products marked as IsDeleted=True after successful import
+            $this->deleteProducts();
         }
 
         return $result;
@@ -178,8 +186,10 @@ class ImportProductsXml extends ImportProfile
                 return $visible === 'True' ? (string) __('Catalog, search') : (string) __('Not visible individually');
             },
             'status' => function ($item) {
-                $deleted = isset($item['IsDeleted']) ? (string) $item['IsDeleted'] : 'True';
-                return $deleted === 'False' ? '1' : '0';
+                // Products with IsDeleted=True are filtered out before import, so all products here should be enabled
+                // Status is controlled by the Visible field instead
+                $visible = isset($item['Visible']) ? (string) $item['Visible'] : 'True';
+                return $visible === 'True' ? '1' : '0';
             },
             'qty' => 0,
             'is_in_stock' => function ($item) {
@@ -482,6 +492,38 @@ class ImportProductsXml extends ImportProfile
             }
 
             if ($missingRequired) {
+                continue;
+            }
+
+            // Check if product is marked as deleted
+            $isDeleted = isset($productArray['IsDeleted']) ? (string) $productArray['IsDeleted'] : 'False';
+            if ($isDeleted === 'True') {
+                // Track this product for deletion
+                $productNumber = $productArray['ProductNumber'] ?? null;
+
+                if ($hasOneVariant) {
+                    // Simple product: track the variant SKU
+                    $sku = (string) ($productArray['ProductVariations']['ProductVariation']['ProductId'] ?? '');
+                    if (!empty($sku)) {
+                        $this->productsToDelete[] = $sku;
+                        $this->log->info("Product {$sku} marked for deletion (IsDeleted=True)");
+                    }
+                } else {
+                    // Configurable product: track parent and all children SKUs
+                    if (!empty($productNumber)) {
+                        $this->productsToDelete[] = $productNumber;
+                        $this->log->info("Configurable product {$productNumber} marked for deletion (IsDeleted=True)");
+                    }
+                    // Also track all child variants
+                    foreach ($productArray['ProductVariations']['ProductVariation'] as $variant) {
+                        $childSku = (string) ($variant['ProductId'] ?? '');
+                        if (!empty($childSku)) {
+                            $this->productsToDelete[] = $childSku;
+                        }
+                    }
+                }
+
+                // Skip this product from the import
                 continue;
             }
 
@@ -789,6 +831,62 @@ class ImportProductsXml extends ImportProfile
 
         // Clear the tracking array
         $this->copiedImageFiles = [];
+    }
+
+    /**
+     * Delete products marked as IsDeleted=True from Magento
+     */
+    private function deleteProducts(): void
+    {
+        if (empty($this->productsToDelete)) {
+            $this->log->info('No products to delete');
+            return;
+        }
+
+        $deletedCount = 0;
+        $failedCount = 0;
+
+        // Set registry flag to allow product deletion
+        $this->registry->register('isSecureArea', true);
+
+        foreach ($this->productsToDelete as $sku) {
+            try {
+                $product = $this->productRepository->get($sku);
+                $this->productRepository->delete($product);
+                $deletedCount++;
+                $this->log->info("Successfully deleted product: {$sku}");
+            } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+                // Product doesn't exist, that's fine
+                $this->log->info("Product {$sku} not found in Magento (already deleted or never imported)");
+            } catch (\Exception $e) {
+                $failedCount++;
+                $this->log->error("Failed to delete product {$sku}: " . $e->getMessage());
+            }
+        }
+
+        // Unregister secure area flag
+        $this->registry->unregister('isSecureArea');
+
+        $this->log->info("Deletion complete: {$deletedCount} products deleted, {$failedCount} failed");
+    }
+
+    /**
+     * Get SKU from product item for logging purposes
+     */
+    private function getProductSku(array $item): string
+    {
+        // Check if this is a configurable parent marker
+        if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
+            return $item['ProductNumber'] ?? 'unknown';
+        }
+
+        // For child products, use ProductId as SKU
+        if (isset($item['ProductVariations']['ProductVariation']['ProductId'])) {
+            return (string) $item['ProductVariations']['ProductVariation']['ProductId'];
+        }
+
+        // Fallback to ProductNumber
+        return $item['ProductNumber'] ?? 'unknown';
     }
 
     /**
