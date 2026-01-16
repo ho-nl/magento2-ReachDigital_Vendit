@@ -32,6 +32,7 @@ class ImportProductsXml extends ImportProfile
 {
     private array $attributeTypeCache = [];
     private ?array $categoryGuidMap = null;
+    private ?array $productGuidMap = null;
     private array $copiedImageFiles = [];
     private array $productsToDelete = [];
 
@@ -147,9 +148,8 @@ class ImportProductsXml extends ImportProfile
             },
             'product_websites' => 'base',
             'name' => function ($item) {
-                $name = isset($item['Description']) && !is_array($item['Description'])
-                    ? (string) $item['Description']
-                    : '';
+                $name =
+                    isset($item['Description']) && !is_array($item['Description']) ? (string) $item['Description'] : '';
 
                 // For child products of configurables, append SKU to make name unique
                 if (isset($item['_configurable_parent_sku']) && !empty($name)) {
@@ -277,6 +277,14 @@ class ImportProductsXml extends ImportProfile
             },
             '_is_configurable_parent' => function ($item) {
                 return $item['_is_configurable_parent'] ?? null;
+            },
+            // Related products (from Accessories)
+            'related_skus' => function ($item) {
+                return $this->mapProductLinks($item, 'Accessories', 'AccessoryProduct');
+            },
+            // Upsell products (from SimilarProducts)
+            'upsell_skus' => function ($item) {
+                return $this->mapProductLinks($item, 'SimilarProducts', 'SimilarProduct');
             },
         ];
 
@@ -488,6 +496,35 @@ class ImportProductsXml extends ImportProfile
             libxml_clear_errors();
             $errorMessages = array_map(fn($e) => trim($e->message), $errors);
             throw new \Exception('Failed to parse products XML file: ' . implode(', ', $errorMessages));
+        }
+
+        // Build GUID to SKU map for product links
+        // For single-variation products, use the variation's ProductId (which becomes the SKU)
+        // For multi-variation products, use the ProductNumber (configurable parent SKU)
+        $this->productGuidMap = [];
+        foreach ($xml->Products->Product as $productNode) {
+            $guid = (string) $productNode->EcommerceProductGuid;
+            $productArray = json_decode(json_encode($productNode), true);
+
+            // Determine if product has single or multiple variants
+            $hasMultipleVariants = isset($productArray['ProductVariations']['ProductVariation'][0]);
+            $hasOneVariant =
+                isset($productArray['ProductVariations']['ProductVariation']['ProductId']) && !$hasMultipleVariants;
+
+            if ($hasOneVariant) {
+                // Single variation: use the variation's ProductId as the SKU
+                $sku = (string) $productArray['ProductVariations']['ProductVariation']['ProductId'];
+            } elseif ($hasMultipleVariants) {
+                // Multiple variations: use the ProductNumber as the configurable parent SKU
+                $sku = (string) $productNode->ProductNumber;
+            } else {
+                // No variations: skip
+                continue;
+            }
+
+            if (!empty($guid) && !empty($sku)) {
+                $this->productGuidMap[$guid] = $sku;
+            }
         }
 
         $items = [];
@@ -1051,5 +1088,59 @@ class ImportProductsXml extends ImportProfile
         $this->categoryGuidMap = $guidMap;
 
         return $this->categoryGuidMap;
+    }
+
+    /**
+     * Map product GUIDs to SKUs for related/upsell products
+     *
+     * @param array $item Product item
+     * @param string $containerField Field name containing the product links (e.g., 'SimilarProducts', 'Accessories')
+     * @param string $itemField Field name of individual items (e.g., 'SimilarProduct', 'AccessoryProduct')
+     * @return string|null Comma-separated SKUs
+     */
+    private function mapProductLinks(array $item, string $containerField, string $itemField): ?string
+    {
+        // Map for both configurable parents AND simple products, but not for child products of configurables
+        $isChildProduct = isset($item['_configurable_parent_sku']) && !empty($item['_configurable_parent_sku']);
+        if ($isChildProduct) {
+            return null;
+        }
+
+        if (!isset($item[$containerField][$itemField])) {
+            return null;
+        }
+
+        $links = $item[$containerField][$itemField];
+
+        // Handle single item (not array of items)
+        if (!is_array($links) || !isset($links[0])) {
+            $links = [$links];
+        }
+
+        $skus = [];
+        foreach ($links as $guid) {
+            if (empty($guid) || is_array($guid)) {
+                continue;
+            }
+
+            // Map GUID to SKU using the product GUID map
+            $sku = $this->getSkuFromGuid((string) $guid);
+            if ($sku) {
+                $skus[] = $sku;
+            }
+        }
+
+        return !empty($skus) ? implode(',', $skus) : null;
+    }
+
+    /**
+     * Get SKU from product GUID using the pre-built GUID map
+     *
+     * @param string $guid Product GUID
+     * @return string|null Product SKU
+     */
+    private function getSkuFromGuid(string $guid): ?string
+    {
+        return $this->productGuidMap[$guid] ?? null;
     }
 }
