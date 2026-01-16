@@ -101,6 +101,12 @@
                     <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
                     <validate>required</validate>
                 </field>
+                <field id="color_attribute" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Color Attribute</label>
+                    <comment><![CDATA[Select which product attribute to use for configurable product color variations (maps to Vendit 'Color' field).]]></comment>
+                    <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
+                    <validate>required</validate>
+                </field>
                 <field id="barcode_attribute" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Barcode Attribute</label>
                     <comment><![CDATA[Select which product attribute to use for matching Vendit barcodes for the stock import.]]></comment>

@@ -37,6 +37,7 @@
             </order_status_mapping>
             <attribute_mapping>
                 <size_attribute>vendit_size</size_attribute>
+                <color_attribute>vendit_color</color_attribute>
                 <barcode_attribute>vendit_barcode</barcode_attribute>
                 <tax_class_id>2</tax_class_id>
             </attribute_mapping>

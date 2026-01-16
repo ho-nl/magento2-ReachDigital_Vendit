@@ -86,10 +86,15 @@ class ImportProductsXml extends ImportProfile
         // Copy images to pub/media/import directory before processing
         $this->copyImagesToImportDirectory();
 
-        // Get configured size attribute
+        // Get configured size and color attributes
         $sizeAttribute = $this->config->getSizeAttribute();
         if (empty($sizeAttribute)) {
             throw new \Exception('Size attribute not configured in Vendit configuration');
+        }
+
+        $colorAttribute = $this->config->getColorAttribute();
+        if (empty($colorAttribute)) {
+            throw new \Exception('Color attribute not configured in Vendit configuration');
         }
 
         $skuResolver = function ($item) {
@@ -142,9 +147,19 @@ class ImportProductsXml extends ImportProfile
             },
             'product_websites' => 'base',
             'name' => function ($item) {
-                return isset($item['Description']) && !is_array($item['Description'])
+                $name = isset($item['Description']) && !is_array($item['Description'])
                     ? (string) $item['Description']
                     : '';
+
+                // For child products of configurables, append SKU to make name unique
+                if (isset($item['_configurable_parent_sku']) && !empty($name)) {
+                    $sku = $item['ProductVariations']['ProductVariation']['ProductId'] ?? '';
+                    if (!empty($sku)) {
+                        $name .= ' - ' . $sku;
+                    }
+                }
+
+                return $name;
             },
             'description' => function ($item) {
                 if (isset($item['BigInfo']) && !is_array($item['BigInfo'])) {
@@ -272,7 +287,25 @@ class ImportProductsXml extends ImportProfile
                 return null;
             }
             $size = $item['ProductVariations']['ProductVariation']['Size'] ?? null;
-            return $size && !is_array($size) ? trim($size) : null;
+            if (!$size || is_array($size)) {
+                return null;
+            }
+            // TODO: Normalize case to avoid duplicate option issues - verify this is sufficient for production data
+            return $this->normalizeAttributeValue(trim($size));
+        };
+
+        // Add color attribute mapping (from Vendit Color field)
+        $mapping[$colorAttribute] = function ($item) {
+            // Skip for configurable parents
+            if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
+                return null;
+            }
+            $color = $item['ProductVariations']['ProductVariation']['Color'] ?? null;
+            if (!$color || is_array($color)) {
+                return null;
+            }
+            // TODO: Normalize case to avoid duplicate option issues - verify this is sufficient for production data
+            return $this->normalizeAttributeValue(trim($color));
         };
 
         // Add barcode attribute mapping (from Vendit Barcodes/Barcode field)
@@ -326,7 +359,7 @@ class ImportProductsXml extends ImportProfile
         $itemMapper->process();
 
         // Collect all select/multiselect attributes that need option creation
-        $selectAttributes = [$sizeAttribute];
+        $selectAttributes = [$sizeAttribute, $colorAttribute];
         $multiselectAttributes = [];
         foreach ($attributeMapping as $attributeCode) {
             switch ($this->getAttributeFrontendInput($attributeCode)) {
@@ -355,7 +388,7 @@ class ImportProductsXml extends ImportProfile
         $multiselectAttributeOptionCreator->process();
 
         // Build configurable_variations field for configurable parents
-        $this->buildConfigurableVariations($items, $sizeAttribute);
+        $this->buildConfigurableVariations($items, $sizeAttribute, $colorAttribute);
 
         // Save processed items for debugging (includes configurable_variations)
         $this->saveProcessedItems($items);
@@ -364,12 +397,13 @@ class ImportProductsXml extends ImportProfile
         foreach ($items as &$item) {
             unset($item['_configurable_parent_sku']);
             unset($item['_is_configurable_parent']);
+            unset($item['_product_variants']);
         }
 
         return $items;
     }
 
-    public function buildConfigurableVariations(array &$items, string $sizeAttribute): void
+    public function buildConfigurableVariations(array &$items, string $sizeAttribute, string $colorAttribute): void
     {
         $configurableGroups = [];
         foreach ($items as $sku => $item) {
@@ -409,6 +443,12 @@ class ImportProductsXml extends ImportProfile
                 // Use the same value that was set in the child product (already normalized)
                 if (!empty($child[$sizeAttribute])) {
                     $variationParts[] = $sizeAttribute . '=' . trim(mb_strtolower($child[$sizeAttribute]));
+                }
+
+                // Add the color attribute if it exists
+                // Use the same value that was set in the child product (already normalized)
+                if (!empty($child[$colorAttribute])) {
+                    $variationParts[] = $colorAttribute . '=' . trim(mb_strtolower($child[$colorAttribute]));
                 }
 
                 $variations[] = implode(',', $variationParts);
@@ -566,6 +606,8 @@ class ImportProductsXml extends ImportProfile
         // Create the configurable parent product
         $configurableParent = $productArray;
         $configurableParent['_is_configurable_parent'] = true;
+        // Store the original variants array for image processing
+        $configurableParent['_product_variants'] = $productArray['ProductVariations']['ProductVariation'];
         unset($configurableParent['ProductVariations']);
         $items[$configurableSku] = $configurableParent;
 
@@ -673,8 +715,30 @@ class ImportProductsXml extends ImportProfile
      */
     private function getImageFromVariation(array $item, int $index): ?string
     {
-        // Skip for configurable parents
+        // For configurable parents, use the first variant's first image
         if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
+            $variants = $item['_product_variants'] ?? [];
+            if (empty($variants)) {
+                return null;
+            }
+
+            // Get the first variant
+            $firstVariant = reset($variants);
+            $images = $firstVariant['Images']['Image'] ?? null;
+
+            if (empty($images)) {
+                return null;
+            }
+
+            // Return the first image
+            if (is_string($images)) {
+                return $this->buildImagePath($images);
+            }
+
+            if (is_array($images) && isset($images[0])) {
+                return $this->buildImagePath($images[0]);
+            }
+
             return null;
         }
 
@@ -702,9 +766,44 @@ class ImportProductsXml extends ImportProfile
      */
     private function getAdditionalImagesFromVariation(array $item): ?string
     {
-        // Skip for configurable parents
+        // For configurable parents, collect all unique images from all variants (except the first image)
         if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
-            return null;
+            $variants = $item['_product_variants'] ?? [];
+            if (empty($variants)) {
+                return null;
+            }
+
+            $allImages = [];
+            $firstImage = null;
+
+            // Collect all images from all variants
+            foreach ($variants as $variant) {
+                $images = $variant['Images']['Image'] ?? null;
+
+                if (empty($images)) {
+                    continue;
+                }
+
+                // Normalize to array
+                $imageArray = is_string($images) ? [$images] : $images;
+
+                foreach ($imageArray as $image) {
+                    $imagePath = $this->buildImagePath($image);
+
+                    // Track the first image (already used as base_image)
+                    if ($firstImage === null) {
+                        $firstImage = $imagePath;
+                        continue;
+                    }
+
+                    // Add unique images only
+                    if (!in_array($imagePath, $allImages)) {
+                        $allImages[] = $imagePath;
+                    }
+                }
+            }
+
+            return !empty($allImages) ? implode(',', $allImages) : null;
         }
 
         $images = $item['ProductVariations']['ProductVariation']['Images']['Image'] ?? null;
@@ -868,6 +967,18 @@ class ImportProductsXml extends ImportProfile
         $this->registry->unregister('isSecureArea');
 
         $this->log->info("Deletion complete: {$deletedCount} products deleted, {$failedCount} failed");
+    }
+
+    /**
+     * Normalize attribute option values to avoid case-sensitivity duplicates
+     * Converts to lowercase, then capitalizes first letter of each word
+     *
+     * @param string $value
+     * @return string
+     */
+    private function normalizeAttributeValue(string $value): string
+    {
+        return ucwords(strtolower($value));
     }
 
     /**

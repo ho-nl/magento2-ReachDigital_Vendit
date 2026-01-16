@@ -28,6 +28,7 @@ class Config
     const XML_PATH_ATTRIBUTE_MAPPING = 'vendit_mapping/attribute_mapping/attributes';
     const XML_PATH_REQUIRED_ATTRIBUTES = 'vendit_mapping/attribute_mapping/required_attributes';
     const XML_PATH_SIZE_ATTRIBUTE = 'vendit_mapping/attribute_mapping/size_attribute';
+    const XML_PATH_COLOR_ATTRIBUTE = 'vendit_mapping/attribute_mapping/color_attribute';
     const XML_PATH_BARCODE_ATTRIBUTE = 'vendit_mapping/attribute_mapping/barcode_attribute';
     const XML_PATH_TAX_CLASS_ID = 'vendit_mapping/attribute_mapping/tax_class_id';
     const XML_PATH_ORDER_STATUS_MAPPING = 'vendit_mapping/order_status_mapping/status_mapping';
@@ -267,6 +268,11 @@ class Config
     public function getSizeAttribute(): ?string
     {
         return $this->scopeConfig->getValue(self::XML_PATH_SIZE_ATTRIBUTE);
+    }
+
+    public function getColorAttribute(): ?string
+    {
+        return $this->scopeConfig->getValue(self::XML_PATH_COLOR_ATTRIBUTE);
     }
 
     public function getBarcodeAttribute(): ?string
