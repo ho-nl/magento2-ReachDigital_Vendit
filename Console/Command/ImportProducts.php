@@ -42,6 +42,12 @@ class ImportProducts extends Command
             return Cli::RETURN_FAILURE;
         }
 
+        // Check if there are pending category imports
+        if ($this->config->hasPendingImportFiles(Config::TYPE_CATEGORY)) {
+            $output->writeln('<info>Skipping product import: category import files are still pending</info>');
+            return Cli::RETURN_SUCCESS;
+        }
+
         try {
             $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_ADMINHTML);
         } catch (\Magento\Framework\Exception\LocalizedException $e) {

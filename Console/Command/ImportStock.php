@@ -44,6 +44,12 @@ class ImportStock extends Command
             return Cli::RETURN_FAILURE;
         }
 
+        // Check if there are pending product imports
+        if ($this->config->hasPendingImportFiles(Config::TYPE_PRODUCT)) {
+            $output->writeln('<info>Skipping stock import: product import files are still pending</info>');
+            return Cli::RETURN_SUCCESS;
+        }
+
         try {
             $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_ADMINHTML);
         } catch (\Magento\Framework\Exception\LocalizedException $e) {

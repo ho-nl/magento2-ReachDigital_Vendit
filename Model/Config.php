@@ -327,4 +327,45 @@ class Config
     {
         return $this->scopeConfig->getValue(self::DIR_MAPPING_CONFIG_PATH . '/import/image_path');
     }
+
+    /**
+     * Check if there are any pending XML files for a specific import type
+     * Checks both the import directory and the processing subdirectory
+     */
+    public function hasPendingImportFiles(string $type): bool
+    {
+        $directory = match ($type) {
+            self::TYPE_ORDER => $this->getOrderImportDirectory(),
+            default => $this->getImportFilesDirectory(),
+        };
+
+        $prefix = $this->getFilePrefix($type);
+
+        // Check main import directory
+        if ($prefix) {
+            $files = glob($directory . DIRECTORY_SEPARATOR . $prefix . '*.xml') ?: [];
+        } else {
+            $files = glob($directory . DIRECTORY_SEPARATOR . '*.xml') ?: [];
+        }
+
+        if (!empty($files)) {
+            return true;
+        }
+
+        // Check processing subdirectory
+        $processingDir = $directory . DIRECTORY_SEPARATOR . 'processing';
+        if (is_dir($processingDir)) {
+            if ($prefix) {
+                $processingFiles = glob($processingDir . DIRECTORY_SEPARATOR . $prefix . '*.xml') ?: [];
+            } else {
+                $processingFiles = glob($processingDir . DIRECTORY_SEPARATOR . '*.xml') ?: [];
+            }
+
+            if (!empty($processingFiles)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
