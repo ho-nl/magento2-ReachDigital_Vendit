@@ -53,6 +53,7 @@ In the Vendit software, configure the following settings:
 #### E-commerce Settings
 
 - Set **XML Export Encoding** to **UTF-8** (not UTF-16)
+- Setup the SFTP credentials
 - Configure path mapping to match Magento's import directories:
   - Upload directory files: `/import/files/`
   - Upload directory images: `/import/images/`

@@ -30,7 +30,7 @@ class ImportCustomers extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:customers:import')->setDescription(
+        $this->setName('vendit:customer:import')->setDescription(
             'Import all customers from XML file supplied by Vendit',
         );
 
