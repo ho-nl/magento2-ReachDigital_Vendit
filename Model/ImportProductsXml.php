@@ -206,24 +206,6 @@ class ImportProductsXml extends ImportProfile
                 $visible = isset($item['Visible']) ? (string) $item['Visible'] : 'True';
                 return $visible === 'True' ? '1' : '0';
             },
-            'qty' => 0,
-            'is_in_stock' => function ($item) {
-                // Skip stock for configurable parents
-                if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
-                    return null;
-                }
-                $status = $item['ProductVariations']['ProductVariation']['AvailabilityStatus'] ?? '';
-                return (string) $status === 'Leverbaar' ? '1' : '0';
-            },
-            'manage_stock' => 1,
-            'use_config_min_qty' => '1',
-            'use_config_backorders' => '1',
-            'use_config_min_sale_qty' => '1',
-            'use_config_max_sale_qty' => '1',
-            'use_config_notify_stock_qty' => '1',
-            'use_config_manage_stock' => '1',
-            'use_config_qty_increments' => '1',
-            'use_config_enable_qty_inc' => '1',
             'base_image' => function ($item) {
                 return $this->getImageFromVariation($item, 0);
             },
