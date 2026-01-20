@@ -10,7 +10,6 @@ namespace ReachDigital\Vendit\Console\Command;
 
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
-use ReachDigital\Vendit\Model\ImportCategoriesXml;
 use ReachDigital\Vendit\Model\MoveImportFiles;
 use ReachDigital\Vendit\Model\ProcessImportFiles;
 use ReachDigital\Vendit\Model\Config;
@@ -21,7 +20,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ImportCategories extends Command
 {
     public function __construct(
-        private readonly ImportCategoriesXml $importer,
         private readonly MoveImportFiles $moveImportFiles,
         private readonly ProcessImportFiles $processImportFiles,
         private readonly State $state,
@@ -51,25 +49,21 @@ class ImportCategories extends Command
         }
 
         try {
-            // First, move any files to processing queue (same as webhook)
+            // First, move any files to processing queue
             $movedFiles = $this->moveImportFiles->execute();
 
             if (!empty($movedFiles)) {
                 $output->writeln(sprintf('<info>Moved %d file(s) to processing queue</info>', count($movedFiles)));
             }
 
-            // Then process files from the processing queue (webhook/automated flow)
+            // Then process files from the processing queue
             $processed = $this->processImportFiles->process(Config::TYPE_CATEGORY);
 
             if ($processed > 0) {
                 $output->writeln(sprintf('<info>Successfully processed %d category import file(s)</info>', $processed));
-                return Cli::RETURN_SUCCESS;
+            } else {
+                $output->writeln('<info>No category import files to process</info>');
             }
-
-            // Manual import flow (no files in processing queue)
-            $output->writeln('<info>Executing category import...</info>');
-            $this->importer->run();
-            $output->writeln('<info>Categories successfully imported</info>');
 
             return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {
