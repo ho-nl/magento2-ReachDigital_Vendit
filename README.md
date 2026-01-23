@@ -15,9 +15,27 @@ Integration module for synchronizing products, stock, categories, customers, and
 ## Installation
 
 ```bash
+# Install composer package
 composer require reach-digital/magento2-vendit
+# Setup module and generate directories
 php bin/magento setup:upgrade
+# Flush the cache
 php bin/magento cache:flush
+```
+
+Assign all product attributes to the 'Default' attribute set, since that is the only attribute set Vendit will use:
+```bash
+php bin/magento vendit:attributes:assign-to-default-set
+```
+
+Transform all attribute codes to lowercase, this is necessary to be able to correctly perform product imports and exports:
+```bash
+php bin/magento vendit:attribute-codes:lowercase
+```
+
+Trim all whitespaces around attribute options that are used as configurable attributes. This might be needed to prevent running into product import/export errors. Pass attribute codes as a comma separated list. By default, these attributes are `vendit_color` and `vendit_size`:
+```bash
+php bin/magento vendit:attribute-options:trim vendit_color,vendit_size
 ```
 
 ## Configuration

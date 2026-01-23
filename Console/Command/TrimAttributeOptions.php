@@ -31,7 +31,11 @@ class TrimAttributeOptions extends Command
     {
         $this->setName('vendit:attribute-options:trim')
             ->setDescription('Trim whitespace from attribute option labels')
-            ->addArgument('attribute_code', InputArgument::REQUIRED, 'Attribute code');
+            ->addArgument(
+                'attribute_codes',
+                InputArgument::REQUIRED,
+                'Attribute code(s), comma-separated (e.g., vendit_color,vendit_size)',
+            );
 
         parent::configure();
     }
@@ -44,73 +48,93 @@ class TrimAttributeOptions extends Command
             // Area code already set
         }
 
-        $attributeCode = $input->getArgument('attribute_code');
-        $output->writeln("<info>Trimming attribute options for: {$attributeCode}</info>");
+        $attributeCodesInput = $input->getArgument('attribute_codes');
+        $attributeCodes = array_map('trim', explode(',', $attributeCodesInput));
 
-        try {
-            $attribute = $this->attributeRepository->get($attributeCode);
+        $output->writeln(sprintf('<info>Processing %d attribute(s)...</info>', count($attributeCodes)));
 
-            $connection = $this->resourceConnection->getConnection();
-            $optionValueTable = $this->resourceConnection->getTableName('eav_attribute_option_value');
-            $optionTable = $this->resourceConnection->getTableName('eav_attribute_option');
+        $grandTotalUpdates = 0;
+        $grandTotalOptions = 0;
 
-            // Get all option IDs for this attribute
-            $select = $connection
-                ->select()
-                ->from($optionTable, ['option_id'])
-                ->where('attribute_id = ?', $attribute->getAttributeId());
+        foreach ($attributeCodes as $attributeCode) {
+            $output->writeln('');
+            $output->writeln("<info>Trimming attribute options for: {$attributeCode}</info>");
 
-            $optionIds = $connection->fetchCol($select);
+            try {
+                $attribute = $this->attributeRepository->get($attributeCode);
 
-            $totalUpdates = 0;
-            $optionsProcessed = 0;
+                $connection = $this->resourceConnection->getConnection();
+                $optionValueTable = $this->resourceConnection->getTableName('eav_attribute_option_value');
+                $optionTable = $this->resourceConnection->getTableName('eav_attribute_option');
 
-            foreach ($optionIds as $optionId) {
-                // Get all store-specific values for this option
+                // Get all option IDs for this attribute
                 $select = $connection
                     ->select()
-                    ->from($optionValueTable, ['value_id', 'store_id', 'value'])
-                    ->where('option_id = ?', $optionId);
+                    ->from($optionTable, ['option_id'])
+                    ->where('attribute_id = ?', $attribute->getAttributeId());
 
-                $storeValues = $connection->fetchAll($select);
+                $optionIds = $connection->fetchCol($select);
 
-                $optionUpdated = false;
-                foreach ($storeValues as $storeValue) {
-                    $originalLabel = $storeValue['value'];
-                    $trimmedLabel = trim($originalLabel);
+                $totalUpdates = 0;
+                $optionsProcessed = 0;
 
-                    if ($originalLabel !== $trimmedLabel) {
-                        if (!$optionUpdated) {
-                            $output->writeln("<comment>Trimming option_id {$optionId}:</comment>");
-                            $optionUpdated = true;
+                foreach ($optionIds as $optionId) {
+                    // Get all store-specific values for this option
+                    $select = $connection
+                        ->select()
+                        ->from($optionValueTable, ['value_id', 'store_id', 'value'])
+                        ->where('option_id = ?', $optionId);
+
+                    $storeValues = $connection->fetchAll($select);
+
+                    $optionUpdated = false;
+                    foreach ($storeValues as $storeValue) {
+                        $originalLabel = $storeValue['value'];
+                        $trimmedLabel = trim($originalLabel);
+
+                        if ($originalLabel !== $trimmedLabel) {
+                            if (!$optionUpdated) {
+                                $output->writeln("<comment>Trimming option_id {$optionId}:</comment>");
+                                $optionUpdated = true;
+                            }
+
+                            // Update the label for this store
+                            $connection->update(
+                                $optionValueTable,
+                                ['value' => $trimmedLabel],
+                                ['value_id = ?' => $storeValue['value_id']],
+                            );
+                            $totalUpdates++;
+
+                            $output->writeln(
+                                "  <info>Store {$storeValue['store_id']}: '{$originalLabel}' -> '{$trimmedLabel}'</info>",
+                            );
                         }
+                    }
 
-                        // Update the label for this store
-                        $connection->update(
-                            $optionValueTable,
-                            ['value' => $trimmedLabel],
-                            ['value_id = ?' => $storeValue['value_id']],
-                        );
-                        $totalUpdates++;
-
-                        $output->writeln(
-                            "  <info>Store {$storeValue['store_id']}: '{$originalLabel}' -> '{$trimmedLabel}'</info>",
-                        );
+                    if ($optionUpdated) {
+                        $optionsProcessed++;
                     }
                 }
 
-                if ($optionUpdated) {
-                    $optionsProcessed++;
-                }
-            }
+                $grandTotalUpdates += $totalUpdates;
+                $grandTotalOptions += $optionsProcessed;
 
-            $output->writeln(
-                "<info>Trimmed {$optionsProcessed} option(s) across {$totalUpdates} store value(s)</info>",
-            );
-            return Cli::RETURN_SUCCESS;
-        } catch (\Exception $e) {
-            $output->writeln("<error>Error: {$e->getMessage()}</error>");
-            return Cli::RETURN_FAILURE;
+                $output->writeln(
+                    "<info>Trimmed {$optionsProcessed} option(s) across {$totalUpdates} store value(s) for {$attributeCode}</info>",
+                );
+            } catch (\Exception $e) {
+                $output->writeln("<error>Error processing {$attributeCode}: {$e->getMessage()}</error>");
+            }
         }
+
+        $output->writeln('');
+        $output->writeln(
+            "<info>Total: Trimmed {$grandTotalOptions} option(s) across {$grandTotalUpdates} store value(s) for " .
+                count($attributeCodes) .
+                ' attribute(s)</info>',
+        );
+
+        return Cli::RETURN_SUCCESS;
     }
 }
