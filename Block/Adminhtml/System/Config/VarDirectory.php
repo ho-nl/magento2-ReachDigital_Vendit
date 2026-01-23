@@ -25,7 +25,7 @@ class VarDirectory extends Field
         $varPath = $this->directoryList->getPath(DirectoryList::VAR_DIR);
 
         return sprintf(
-            '<code>%s/</code><br/><small>All directory paths below are relative to this location.</small>',
+            '<code>%s/vendit/</code><br/><small>All directory paths below are relative to this location.</small>',
             $this->escapeHtml($varPath),
         );
     }

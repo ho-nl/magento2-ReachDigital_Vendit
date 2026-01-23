@@ -54,8 +54,9 @@
                     <label>Base Directory</label>
                     <frontend_model>ReachDigital\Vendit\Block\Adminhtml\System\Config\VarDirectory</frontend_model>
                 </field>
-                <group id="import" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <group id="import" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Import</label>
+                    <comment><![CDATA[<strong style="color: #eb5202;">Warning:</strong> Do not change these settings unless you know what you are doing. These paths must match your Vendit FTP/SFTP configuration.]]></comment>
                     <field id="file_path" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>File Path</label>
                     </field>
@@ -75,8 +76,9 @@
                         <label>Order Updates File Path</label>
                     </field>
                 </group>
-                <group id="export" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <group id="export" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Export</label>
+                    <comment><![CDATA[<strong style="color: #eb5202;">Warning:</strong> Do not change these settings unless you know what you are doing. These paths must match your Vendit FTP/SFTP configuration.]]></comment>
                     <field id="order_path" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                         <label>Orders File Path</label>
                     </field>

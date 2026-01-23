@@ -74,6 +74,10 @@ class MoveImportFiles
             return [];
         }
 
+        // Sort files to ensure correct processing order for batched imports
+        // Files with batch numbers (e.g., Products_1_timestamp.xml) should be sorted by batch number
+        $files = $this->sortImportFiles($files);
+
         // Create processing subdirectory if it doesn't exist
         $processingDir = $sourceDir . DIRECTORY_SEPARATOR . self::PROCESSING_SUBDIRECTORY;
 
@@ -100,6 +104,37 @@ class MoveImportFiles
         }
 
         return $movedFiles;
+    }
+
+    /**
+     * Sort import files to ensure correct processing order
+     * Files without batch numbers come first, then files sorted by batch number
+     * Example: Products.xml, Products_1.xml, Products_2.xml
+     */
+    private function sortImportFiles(array $files): array
+    {
+        usort($files, function ($a, $b) {
+            $filenameA = basename($a);
+            $filenameB = basename($b);
+
+            // Extract batch number from filename (e.g., Products_1_timestamp.xml -> 1)
+            // Pattern: Prefix_BatchNumber_Timestamp.xml or Prefix_Timestamp.xml
+            preg_match('/_(\d+)_\d+\.xml$/', $filenameA, $matchesA);
+            preg_match('/_(\d+)_\d+\.xml$/', $filenameB, $matchesB);
+
+            $batchA = isset($matchesA[1]) ? (int) $matchesA[1] : 0;
+            $batchB = isset($matchesB[1]) ? (int) $matchesB[1] : 0;
+
+            // Files without batch numbers (batch 0) come first
+            if ($batchA === $batchB) {
+                // If same batch number, sort alphabetically
+                return strcmp($filenameA, $filenameB);
+            }
+
+            return $batchA <=> $batchB;
+        });
+
+        return $files;
     }
 
     /**

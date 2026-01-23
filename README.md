@@ -48,12 +48,16 @@ Navigate to **Stores > Configuration > Vendit** to configure:
 
 ### Vendit Configuration
 
+**Note:** Prior to configuring Vendit, you need to setup an FTP account for Vendit to use.  
+Use the directory as shown at **Vendit > General Configuration > Directory Mapping > Base Directory** in the Magento configuration as the home directory for your Vendit FTP account.
+
 In the Vendit software, configure the following settings:
 
 #### E-commerce Settings
 
-- Set **XML Export Encoding** to **UTF-8** (not UTF-16)
-- Setup the SFTP credentials
+- Set product export batch to 1000
+- Set XML Export Encoding to UTF-8 (not UTF-16)
+- Setup the SFTP credentials.
 - Configure path mapping to match Magento's import directories:
   - Upload directory files: `/import/files/`
   - Upload directory images: `/import/images/`

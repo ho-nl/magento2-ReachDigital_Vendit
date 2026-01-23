@@ -18,6 +18,7 @@ use Magento\Framework\Setup\SchemaSetupInterface;
 class Recurring implements InstallSchemaInterface
 {
     private const CONFIG_PATH = 'vendit/directory_mapping';
+    private const BASE_DIRECTORY = 'vendit';
 
     public function __construct(
         private readonly DirectoryList $directoryList,
@@ -35,7 +36,8 @@ class Recurring implements InstallSchemaInterface
         $directories = $this->getDirectoriesFromConfig();
 
         foreach ($directories as $directory) {
-            $fullPath = $varPath . DIRECTORY_SEPARATOR . $directory;
+            // Prepend base directory to all paths
+            $fullPath = $varPath . DIRECTORY_SEPARATOR . self::BASE_DIRECTORY . DIRECTORY_SEPARATOR . $directory;
 
             if (!$this->ioFile->fileExists($fullPath)) {
                 $this->ioFile->mkdir($fullPath, 0775);

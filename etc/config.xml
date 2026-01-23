@@ -17,16 +17,16 @@
             </general>
             <directory_mapping>
                 <import>
-                    <file_path>vendit/import/files</file_path>
+                    <file_path>import/files</file_path>
                     <product_file_prefix>Products</product_file_prefix>
                     <stock_file_prefix>Stock</stock_file_prefix>
                     <category_file_prefix>Groups</category_file_prefix>
                     <customer_file_prefix>Customers</customer_file_prefix>
-                    <image_path>vendit/import/images</image_path>
-                    <order_path>vendit/import/orders</order_path>
+                    <image_path>import/images</image_path>
+                    <order_path>import/orders</order_path>
                 </import>
                 <export>
-                    <order_path>vendit/export/orders</order_path>
+                    <order_path>export/orders</order_path>
                     <order_file>Order_%s.xml</order_file>
                 </export>
             </directory_mapping>

@@ -33,6 +33,8 @@ class Config
     const XML_PATH_TAX_CLASS_ID = 'vendit_mapping/attribute_mapping/tax_class_id';
     const XML_PATH_ORDER_STATUS_MAPPING = 'vendit_mapping/order_status_mapping/status_mapping';
 
+    const BASE_DIRECTORY = 'vendit';
+
     const TYPE_CATEGORY = 'category';
     const TYPE_CUSTOMER = 'customer';
     const TYPE_ORDER = 'order';
@@ -89,7 +91,8 @@ class Config
     {
         $path = trim($this->scopeConfig->getValue(self::DIR_MAPPING_CONFIG_PATH . '/import/file_path'), '/');
 
-        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $path;
+        $fullPath = self::BASE_DIRECTORY . DIRECTORY_SEPARATOR . $path;
+        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $fullPath;
 
         if (!is_dir($directory)) {
             $this->ioFile->mkdir($directory, 0775);
@@ -155,7 +158,8 @@ class Config
     {
         $path = trim($this->scopeConfig->getValue(self::DIR_MAPPING_CONFIG_PATH . '/import/order_path'), '/');
 
-        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $path;
+        $fullPath = self::BASE_DIRECTORY . DIRECTORY_SEPARATOR . $path;
+        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $fullPath;
 
         if (!is_dir($directory)) {
             $this->ioFile->mkdir($directory, 0775);
@@ -187,7 +191,8 @@ class Config
             '/',
         );
 
-        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $path;
+        $fullPath = self::BASE_DIRECTORY . DIRECTORY_SEPARATOR . $path;
+        $directory = $this->directoryList->getPath('var') . DIRECTORY_SEPARATOR . $fullPath;
 
         if (!is_dir($directory)) {
             $this->ioFile->mkdir($directory, 0775);
@@ -325,7 +330,14 @@ class Config
 
     public function getImagePath(): ?string
     {
-        return $this->scopeConfig->getValue(self::DIR_MAPPING_CONFIG_PATH . '/import/image_path');
+        $path = $this->scopeConfig->getValue(self::DIR_MAPPING_CONFIG_PATH . '/import/image_path');
+
+        if (!$path) {
+            return null;
+        }
+
+        $path = trim($path, '/');
+        return self::BASE_DIRECTORY . DIRECTORY_SEPARATOR . $path;
     }
 
     /**

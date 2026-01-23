@@ -80,11 +80,14 @@ class ProcessImportFiles
 
         if (!$prefix) {
             // If no prefix configured, return all XML files
-            return glob($directory . DIRECTORY_SEPARATOR . '*.xml') ?: [];
+            $files = glob($directory . DIRECTORY_SEPARATOR . '*.xml') ?: [];
+        } else {
+            // Get files matching the prefix
+            $files = glob($directory . DIRECTORY_SEPARATOR . $prefix . '*.xml') ?: [];
         }
 
-        // Get files matching the prefix
-        return glob($directory . DIRECTORY_SEPARATOR . $prefix . '*.xml') ?: [];
+        // Sort files to ensure correct processing order for batched imports
+        return $this->sortImportFiles($files);
     }
 
     /**
@@ -220,6 +223,37 @@ class ProcessImportFiles
         // Write error log file
         $errorLogPath = $destination . '.error.log';
         file_put_contents($errorLogPath, sprintf("Error: %s\nTimestamp: %s\n", $errorMessage, date('Y-m-d H:i:s')));
+    }
+
+    /**
+     * Sort import files to ensure correct processing order
+     * Files without batch numbers come first, then files sorted by batch number
+     * Example: Products_timestamp.xml, Products_1_timestamp.xml, Products_2_timestamp.xml
+     */
+    private function sortImportFiles(array $files): array
+    {
+        usort($files, function ($a, $b) {
+            $filenameA = basename($a);
+            $filenameB = basename($b);
+
+            // Extract batch number from filename (e.g., Products_1_timestamp.xml -> 1)
+            // Pattern: Prefix_BatchNumber_Timestamp.xml or Prefix_Timestamp.xml
+            preg_match('/_(\d+)_\d+\.xml$/', $filenameA, $matchesA);
+            preg_match('/_(\d+)_\d+\.xml$/', $filenameB, $matchesB);
+
+            $batchA = isset($matchesA[1]) ? (int) $matchesA[1] : 0;
+            $batchB = isset($matchesB[1]) ? (int) $matchesB[1] : 0;
+
+            // Files without batch numbers (batch 0) come first
+            if ($batchA === $batchB) {
+                // If same batch number, sort alphabetically
+                return strcmp($filenameA, $filenameB);
+            }
+
+            return $batchA <=> $batchB;
+        });
+
+        return $files;
     }
 
     /**
