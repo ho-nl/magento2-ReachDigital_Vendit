@@ -53,7 +53,7 @@ class ExportOrdersXml
 
     private function exportSingleOrder($order, string $exportTimestamp): void
     {
-        $doc = new \DOMDocument('1.0', 'utf-16');
+        $doc = new \DOMDocument('1.0', 'utf-8');
         $doc->formatOutput = true;
 
         $orderImport = $doc->createElement('OrderImport');
