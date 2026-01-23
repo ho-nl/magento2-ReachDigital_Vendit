@@ -31,6 +31,12 @@ class ProcessProductImport
             return;
         }
 
+        // Check if there are pending category imports
+        if ($this->config->hasPendingImportFiles(Config::TYPE_CATEGORY)) {
+            $this->logger->info('Vendit cron: skipping product import, category import files are still pending');
+            return;
+        }
+
         try {
             $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_CRONTAB);
         } catch (\Magento\Framework\Exception\LocalizedException $e) {

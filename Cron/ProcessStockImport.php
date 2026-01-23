@@ -31,6 +31,12 @@ class ProcessStockImport
             return;
         }
 
+        // Check if there are pending product imports
+        if ($this->config->hasPendingImportFiles(Config::TYPE_PRODUCT)) {
+            $this->logger->info('Vendit cron: skipping stock import, product import files are still pending');
+            return;
+        }
+
         try {
             $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_CRONTAB);
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
