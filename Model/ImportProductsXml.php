@@ -180,7 +180,7 @@ class ImportProductsXml extends ImportProfile
                 if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
                     return null;
                 }
-                $price = $item['ProductVariations']['ProductVariation']['SalesPriceEx'] ?? 0;
+                $price = $item['ProductVariations']['ProductVariation']['SalesPriceInc'] ?? 0;
                 return is_numeric($price) ? (float) $price : 0;
             },
             'tax_class_id' => $this->config->getTaxClassId(),
@@ -328,6 +328,19 @@ class ImportProductsXml extends ImportProfile
                 return null;
             };
         }
+
+        // Add product GUID attribute mapping (from Vendit EcommerceProductVariationGuid field)
+        $mapping['vendit_product_guid'] = function ($item) {
+            // Skip for configurable parents
+            if (isset($item['_is_configurable_parent']) && $item['_is_configurable_parent']) {
+                return null;
+            }
+
+            // Get GUID from ProductVariation
+            $guid = $item['ProductVariations']['ProductVariation']['EcommerceProductVariationGuid'] ?? null;
+
+            return !empty($guid) ? trim($guid) : null;
+        };
 
         // Add dynamically mapped attributes from config
         $attributeMapping = $this->config->getAttributeMapping();
