@@ -401,6 +401,7 @@ class ImportProductsXml extends ImportProfile
             unset($item['_configurable_parent_sku']);
             unset($item['_is_configurable_parent']);
             unset($item['_product_variants']);
+            unset($item['_converting_to_child']);
         }
 
         return $items;
@@ -606,8 +607,23 @@ class ImportProductsXml extends ImportProfile
                 }
             } else {
                 // Configurable product: multiple variations
-                foreach ($this->createConfigurableProduct($productArray) as $sku => $product) {
-                    $items[$sku] = $product;
+                // Check if this product was previously imported as a simple product
+                // If so, we need to convert it to configurable
+                $firstVariantSku = (string) ($productArray['ProductVariations']['ProductVariation'][0]['ProductId'] ?? '');
+
+                if (!empty($firstVariantSku) && $this->productExistsAsSimple($firstVariantSku)) {
+                    $this->log->info(
+                        "Product {$firstVariantSku} exists as simple but now has multiple variants - converting to configurable"
+                    );
+                    // Create configurable with conversion flag
+                    foreach ($this->createConfigurableProduct($productArray, true) as $sku => $product) {
+                        $items[$sku] = $product;
+                    }
+                } else {
+                    // Normal configurable product creation
+                    foreach ($this->createConfigurableProduct($productArray) as $sku => $product) {
+                        $items[$sku] = $product;
+                    }
                 }
             }
         }
@@ -626,7 +642,20 @@ class ImportProductsXml extends ImportProfile
         return [$sku => $productArray];
     }
 
-    public function createConfigurableProduct(array $productArray): array
+    /**
+     * Check if a product exists in Magento as a simple product type
+     */
+    private function productExistsAsSimple(string $sku): bool
+    {
+        try {
+            $product = $this->productRepository->get($sku);
+            return $product->getTypeId() === 'simple';
+        } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+            return false;
+        }
+    }
+
+    public function createConfigurableProduct(array $productArray, bool $isConversion = false): array
     {
         $configurableSku = (string) $productArray['ProductNumber'];
         if (empty($configurableSku)) {
@@ -644,7 +673,7 @@ class ImportProductsXml extends ImportProfile
         $items[$configurableSku] = $configurableParent;
 
         // Create a simple product for each variant
-        foreach ($productArray['ProductVariations']['ProductVariation'] as $variant) {
+        foreach ($productArray['ProductVariations']['ProductVariation'] as $index => $variant) {
             // Use ProductId as SKU (unique per variation)
             $sku = (string) ($variant['ProductId'] ?? '');
             if (empty($sku)) {
@@ -654,6 +683,11 @@ class ImportProductsXml extends ImportProfile
             $simpleProduct = $productArray;
             $simpleProduct['ProductVariations']['ProductVariation'] = $variant;
             $simpleProduct['_configurable_parent_sku'] = $configurableSku;
+
+            // Mark the first variant as an existing simple that needs conversion
+            if ($isConversion && $index === 0) {
+                $simpleProduct['_converting_to_child'] = true;
+            }
 
             $items[$sku] = $simpleProduct;
         }
