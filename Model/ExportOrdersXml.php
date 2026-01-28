@@ -133,7 +133,7 @@ class ExportOrdersXml
             );
             $orderNode->appendChild($doc->createElement('InvoiceZipcode', $billing->getPostcode()));
             $orderNode->appendChild($doc->createElement('InvoiceCity', $billing->getCity()));
-            $orderNode->appendChild($doc->createElement('InvoiceCountry', $billing->getCountryId())); // @todo country full name
+            $orderNode->appendChild($doc->createElement('InvoiceCountry', $billing->getCountryId()));
             $orderNode->appendChild($doc->createElement('InvoiceCountryCode', $billing->getCountryId()));
         }
 
