@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace ReachDigital\Vendit\Model;
 
+use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -21,6 +22,7 @@ class ExportOrdersXml
         private readonly DateTime $dateTime,
         private readonly Config $venditConfig,
         private readonly ExportedOrderResource $exportedOrderResource,
+        private readonly ProductRepositoryInterface $productRepository,
     ) {
     }
 
@@ -75,11 +77,7 @@ class ExportOrdersXml
         $filename = $this->generateFilename($order, $exportTimestamp);
         $filePath = $this->getExportDirectory() . DIRECTORY_SEPARATOR . $filename;
 
-        // Save and convert 2-space indentation to 4-space
         $xml = $doc->saveXML();
-        $xml = preg_replace_callback('/^( +)/m', function ($matches) {
-            return str_repeat(' ', strlen($matches[1]) * 2);
-        }, $xml);
         file_put_contents($filePath, $xml);
     }
 
@@ -92,32 +90,42 @@ class ExportOrdersXml
         $orderNode->appendChild($doc->createElement('OrderNumber', $order->getIncrementId()));
         $orderNode->appendChild($doc->createElement('StoreNumber', $order->getStoreId()));
         $orderNode->appendChild($doc->createElement('OrderType', 'Order'));
-        $orderNode->appendChild($doc->createElement('OrderDate', $order->getCreatedAt()));
-        $orderNode->appendChild(
-            $doc->createElement('TotalOrderAmount', number_format((float) $order->getGrandTotal(), 4, '.', '')),
-        );
+
+        // OrderDate format: yyyy-MM-dd HH:mm:ss
+        $orderDate = (new \DateTime($order->getCreatedAt()))->format('Y-m-d H:i:s');
+        $orderNode->appendChild($doc->createElement('OrderDate', $orderDate));
+
+        $orderNode->appendChild($doc->createElement('TotalOrderAmount', $this->formatDecimal($order->getGrandTotal())));
         $orderNode->appendChild(
             $doc->createElement('PaymentMethod', $order->getPayment() ? $order->getPayment()->getMethod() : ''),
         );
-        $orderNode->appendChild($doc->createElement('Paid', number_format((float) $order->getTotalPaid(), 4, '.', '')));
+        $orderNode->appendChild($doc->createElement('PaymentCosts', $this->formatDecimal(0.0)));
+        $orderNode->appendChild($doc->createElement('Paid', $this->formatDecimal($order->getTotalPaid())));
         $orderNode->appendChild($doc->createElement('ShippingMethod', $order->getShippingDescription()));
         $orderNode->appendChild(
-            $doc->createElement('ShippingCosts', number_format((float) $order->getShippingInclTax(), 4, '.', '')),
+            $doc->createElement('ShippingCosts', $this->formatDecimal($order->getShippingInclTax())),
         );
+
+        // Discount
+        $orderNode->appendChild($doc->createElement('InvoiceDiscountName', $order->getDiscountDescription() ?: ''));
         $orderNode->appendChild(
             $doc->createElement(
                 'InvoiceDiscountAmount',
-                number_format((float) $order->getDiscountAmount(), 4, '.', ''),
+                $this->formatDecimal(abs((float) $order->getDiscountAmount())),
             ),
         );
 
         // Invoice (billing) address
         $billing = $order->getBillingAddress();
         if ($billing) {
+            $orderNode->appendChild($doc->createElement('Title', $billing->getPrefix() ?: ''));
             $orderNode->appendChild($doc->createElement('FirstName', $billing->getFirstname()));
+            $orderNode->appendChild($doc->createElement('MiddleName', $billing->getMiddlename() ?: ''));
             $orderNode->appendChild($doc->createElement('LastName', $billing->getLastname()));
+            $orderNode->appendChild($doc->createElement('CompanyName', $billing->getCompany() ?: ''));
             $orderNode->appendChild($doc->createElement('EmailAddress', $order->getCustomerEmail()));
             $orderNode->appendChild($doc->createElement('Phone', $billing->getTelephone()));
+            $orderNode->appendChild($doc->createElement('PhoneMobile', $billing->getTelephone()));
             $orderNode->appendChild($doc->createElement('InvoiceAddress', $billing->getStreetLine(1)));
             $orderNode->appendChild($doc->createElement('InvoiceHousenumber', $billing->getStreetLine(2) ?: ''));
             $orderNode->appendChild(
@@ -129,8 +137,9 @@ class ExportOrdersXml
             $orderNode->appendChild($doc->createElement('InvoiceCountryCode', $billing->getCountryId()));
         }
 
-        // @todo implement, get IDs from Vendit
-        $orderNode->appendChild($doc->createElement('OrderStatusId', ''));
+        // Get Vendit status ID from config mapping
+        $venditStatusId = $this->venditConfig->getVenditStatusIdForMagentoStatus($order->getStatus());
+        $orderNode->appendChild($doc->createElement('OrderStatusId', $venditStatusId));
 
         // Delivery (shipping) address
         $shipping = $order->getShippingAddress();
@@ -139,6 +148,7 @@ class ExportOrdersXml
             $orderNode->appendChild($doc->createElement('DeliveryFirstName', $shipping->getFirstname() ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryMiddleName', $shipping->getMiddlename() ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryLastName', $shipping->getLastname() ?: ''));
+            $orderNode->appendChild($doc->createElement('DeliveryCompanyName', $shipping->getCompany() ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryAddress', $shipping->getStreetLine(1) ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryHousenumber', $shipping->getStreetLine(2) ?: ''));
             $orderNode->appendChild(
@@ -153,16 +163,73 @@ class ExportOrdersXml
         // Products
         $productsNode = $doc->createElement('Products');
         foreach ($order->getAllVisibleItems() as $item) {
+            // For configurable products, get the actual child product that was ordered
+            // $item->getProduct() returns the parent, we need the actual variant
+            $product = $item->getProduct();
+
+            // Check if this is a child of a configurable product
+            if ($product && $product->getTypeId() === 'configurable') {
+                // Load the actual simple product by SKU
+                try {
+                    $product = $this->productRepository->get($item->getSku());
+                } catch (\Exception $e) {
+                    // If we can't load it, continue with the parent
+                }
+            }
+
+            $barcodeAttribute = $this->venditConfig->getBarcodeAttribute();
+
             $productNode = $doc->createElement('Product');
+
+            // Add EcommerceProductGuid if available (stored in vendit_product_guid attribute)
+            $guid = '';
+            if ($product) {
+                $guid = (string) $product->getData('vendit_product_guid');
+            }
+            $productNode->appendChild($doc->createElement('EcommerceProductGuid', $guid));
+
+            // ProductId is the SKU in Vendit
+            $productNode->appendChild($doc->createElement('ProductId', $item->getSku()));
+
+            // SKU field for compatibility
             $productNode->appendChild($doc->createElement('Sku', $item->getSku()));
+
+            // Product name/description
             $productNode->appendChild($doc->createElement('Name', htmlentities($item->getName())));
-            $productNode->appendChild($doc->createElement('Qty', $item->getQtyOrdered()));
+            $productNode->appendChild($doc->createElement('Description', htmlentities($item->getName())));
+
+            // EAN/Barcode
+            $ean = '';
+            if ($barcodeAttribute && $product) {
+                $ean = (string) $product->getData($barcodeAttribute);
+            }
+            $productNode->appendChild($doc->createElement('EAN', $ean));
+
+            // Quantity
+            $productNode->appendChild($doc->createElement('Qty', $this->formatDecimal($item->getQtyOrdered())));
+            $productNode->appendChild($doc->createElement('Quantity', $this->formatDecimal($item->getQtyOrdered())));
+
+            // Prices
+            $productNode->appendChild($doc->createElement('Price', $this->formatDecimal($item->getPriceInclTax())));
             $productNode->appendChild(
-                $doc->createElement('Price', number_format((float) $item->getPriceInclTax(), 4, '.', '')),
+                $doc->createElement('ProductSalesPriceInc', $this->formatDecimal($item->getPriceInclTax())),
             );
             $productNode->appendChild(
-                $doc->createElement('RowTotal', number_format((float) $item->getRowTotalInclTax(), 4, '.', '')),
+                $doc->createElement('ProductSalesPriceEx', $this->formatDecimal($item->getPrice())),
             );
+
+            // Row totals
+            $productNode->appendChild(
+                $doc->createElement('RowTotal', $this->formatDecimal($item->getRowTotalInclTax())),
+            );
+
+            // Tax information
+            $productNode->appendChild($doc->createElement('VatPercent', $this->formatDecimal($item->getTaxPercent())));
+
+            // Additional fields that might be needed
+            $productNode->appendChild($doc->createElement('Remarks', ''));
+            $productNode->appendChild($doc->createElement('PrivateCopyLevy', '0.0000'));
+
             $productsNode->appendChild($productNode);
         }
         $orderNode->appendChild($productsNode);
@@ -197,5 +264,10 @@ class ExportOrdersXml
     {
         $filePath = $this->venditConfig->getOrderExportFilePath();
         return dirname($filePath);
+    }
+
+    private function formatDecimal(float|string|null $value): string
+    {
+        return number_format((float) $value, 4, '.', '');
     }
 }

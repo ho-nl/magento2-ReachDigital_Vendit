@@ -23,27 +23,27 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[Enable or disable the complete Vendit integration.]]></comment>
                 </field>
-                <field id="enable_product_import" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enable_product_import" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Product Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="enable_stock_import" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enable_stock_import" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Stock Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="enable_category_import" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enable_category_import" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Category Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="enable_customer_import" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enable_customer_import" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Customer Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="enable_order_update_import" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enable_order_update_import" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Order Update Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="enable_order_export" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enable_order_export" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Order Export</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
@@ -140,12 +140,13 @@
                     <label>Status Mapping</label>
                     <frontend_model>ReachDigital\Vendit\Block\Adminhtml\Form\Field\OrderStatusMapping</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment><![CDATA[Map Vendit Status IDs to Magento order statuses. The Vendit Status ID can be found in the
-                    order updates XML file (<code>OrderStatusId</code> field). Optional: add the Vendit Status Description for future reference.<br/>
-                    <b>Note:</b> The Magento statuses are sorted by order state.<br/>
-                    <b style="color: #eb5202">Important note:</b> By default, the 'Uitgeleverd' Vendit status is linked to the complete status '<i>Uitgeleverd (complete)</i>'.
+                    <comment><![CDATA[Map Vendit Status Enum values to Magento order statuses. The Status Enum value can be found in the
+                    order updates XML file (<code>StatusEnumValue</code> field in the <code>&lt;Order&gt;</code> element). Optional: add the Vendit Status Description for future reference (found in <code>OrderStatusList</code>).<br/>
+                    The Magento statuses are grouped by order state.<br/>
+                    <b>Note:</b> When a Vendit status enum is not mapped here, only a comment will be added to the order in Magento - the status will remain unchanged.<br/>
+                    <b style="color: #eb5202">Important note:</b> By default, the 'Uitgeleverd' Vendit status (Enum: 8) is linked to the 'complete' status.
                     This means that a shipment is created in Magento to complete the order. If the order should remain processing in Magento, please
-                    link the 'Uitgeleverd' Vendit status to the processing status '<i>Uitgeleverd</i>'.]]></comment>
+                    link the 'Uitgeleverd' Vendit status to the 'processing' Magento status instead.]]></comment>
                 </field>
             </group>
         </section>

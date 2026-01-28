@@ -10,6 +10,7 @@ namespace ReachDigital\Vendit\Model;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem\Io\File as IoFile;
 use Magento\Framework\Serialize\SerializerInterface;
 
@@ -315,8 +316,8 @@ class Config
                 if (
                     isset($statusMap['vendit_status_id']) &&
                     isset($statusMap['magento_status']) &&
-                    !empty($statusMap['vendit_status_id']) &&
-                    !empty($statusMap['magento_status'])
+                    $statusMap['vendit_status_id'] !== '' &&
+                    $statusMap['magento_status'] !== ''
                 ) {
                     $result[$statusMap['vendit_status_id']] = $statusMap['magento_status'];
                 }
@@ -379,5 +380,29 @@ class Config
         }
 
         return false;
+    }
+
+    /**
+     * Get Vendit status ID for a given Magento order status
+     *
+     * @throws LocalizedException
+     */
+    public function getVenditStatusIdForMagentoStatus(string $magentoStatus): string
+    {
+        $mapping = $this->getOrderStatusMapping();
+
+        // Reverse the mapping to find Vendit status ID by Magento status
+        foreach ($mapping as $venditStatusId => $mappedMagentoStatus) {
+            if ($mappedMagentoStatus === $magentoStatus) {
+                return (string) $venditStatusId;
+            }
+        }
+
+        throw new LocalizedException(
+            __(
+                'No Vendit status ID mapping found for Magento status "%1". Please configure the mapping in Stores > Configuration > Vendit > Order Status Mapping',
+                $magentoStatus,
+            ),
+        );
     }
 }

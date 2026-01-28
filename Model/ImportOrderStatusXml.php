@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace ReachDigital\Vendit\Model;
 
+use Magento\Framework\Console\Cli;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -38,53 +39,10 @@ class ImportOrderStatusXml
     ) {
     }
 
-    public function loadOrderStatuses(): array
-    {
-        $xmlFilePath = $this->config->getOrderImportFilePath();
-        if (!file_exists($xmlFilePath)) {
-            throw new \Exception("Order status XML file not found: {$xmlFilePath}");
-        }
-
-        $content = file_get_contents($xmlFilePath);
-        if ($content === false) {
-            throw new \Exception('Failed to read order status XML file');
-        }
-
-        // Remove UTF-8 BOM if present (EF BB BF)
-        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
-            $content = substr($content, 3);
-        }
-
-        $xml = simplexml_load_string($content);
-        if ($xml === false) {
-            throw new \Exception('Failed to parse order status XML file');
-        }
-
-        $orders = [];
-        if (isset($xml->Orders->Order)) {
-            foreach ($xml->Orders->Order as $orderNode) {
-                $orderNumber = (string) ($orderNode->OrderNumber ?? '');
-                $orderStatusId = (string) ($orderNode->OrderStatusId ?? '');
-                $statusDescription = (string) ($orderNode->StatusDescription ?? '');
-                $orderStatusDate = (string) ($orderNode->OrderStatusDate ?? '');
-
-                if (empty($orderNumber) || empty($orderStatusId)) {
-                    continue;
-                }
-
-                $orders[] = [
-                    'order_number' => $orderNumber,
-                    'vendit_status_id' => $orderStatusId,
-                    'status_description' => $statusDescription,
-                    'status_date' => $orderStatusDate,
-                ];
-            }
-        }
-
-        return $orders;
-    }
-
-    public function run(): void
+    /**
+     * @throws LocalizedException
+     */
+    public function run(): int
     {
         $this->logger->info('Starting Vendit order status import');
 
@@ -98,25 +56,48 @@ class ImportOrderStatusXml
             );
         }
 
-        $orders = $this->loadOrderStatuses();
+        $xmlFilePath = $this->config->getOrderImportFilePath();
+        if (!file_exists($xmlFilePath)) {
+            throw new \Exception("Order status XML file not found: {$xmlFilePath}");
+        }
+
+        $content = file_get_contents($xmlFilePath);
+        if ($content === false) {
+            throw new \Exception('Failed to read order status XML file');
+        }
+
+        // Remove UTF-8 BOM if present (EF BB BF)
+        if (str_starts_with($content, "\xEF\xBB\xBF")) {
+            $content = substr($content, 3);
+        }
+
+        $xml = simplexml_load_string($content);
+        if ($xml === false) {
+            throw new \Exception('Failed to parse order status XML file');
+        }
+
+        // Build human-readable descriptions from OrderStatusList for comments
+        $statusDescriptions = $this->buildStatusDescriptions($xml);
 
         $this->processedOrders = [];
         $this->skippedOrders = [];
         $errors = [];
 
-        foreach ($orders as $orderData) {
-            try {
-                $this->updateOrderStatus($orderData);
-            } catch (\Exception $e) {
-                $errorMsg = $e->getMessage();
-                $this->logger->error('Failed to update order', [
-                    'order_number' => $orderData['order_number'],
-                    'error' => $errorMsg,
-                ]);
-                $errors[] = [
-                    'order_number' => $orderData['order_number'],
-                    'error' => $errorMsg,
-                ];
+        if (isset($xml->Orders->Order)) {
+            foreach ($xml->Orders->Order as $orderNode) {
+                try {
+                    $this->updateOrderStatus($orderNode, $statusDescriptions);
+                } catch (\Exception $e) {
+                    $orderNumber = (string) ($orderNode->OrderNumber ?? '');
+                    $this->logger->error('Failed to update order', [
+                        'order_number' => $orderNumber,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $errors[] = [
+                        'order_number' => $orderNumber,
+                        'error' => $e->getMessage(),
+                    ];
+                }
             }
         }
 
@@ -125,28 +106,57 @@ class ImportOrderStatusXml
             'skipped' => count($this->skippedOrders),
             'errors' => count($errors),
         ]);
+
+        return Cli::RETURN_SUCCESS;
     }
 
-    private function updateOrderStatus(array $orderData): void
+    /**
+     * Build human-readable status descriptions from OrderStatusList (EnumValue => StatusDescription)
+     */
+    private function buildStatusDescriptions(\SimpleXMLElement $xml): array
     {
-        $orderNumber = $orderData['order_number'];
-        $venditStatusId = $orderData['vendit_status_id'];
+        $descriptions = [];
 
-        // Check if we have a mapping for this Vendit status
-        if (!isset($this->statusMapping[$venditStatusId])) {
-            $reason = "No mapping found for Vendit status ID: {$venditStatusId}";
-            $this->logger->debug('Skipping order', ['order_number' => $orderNumber, 'reason' => $reason]);
-            $this->skippedOrders[] = [
-                'order_number' => $orderNumber,
-                'reason' => $reason,
-            ];
+        if (isset($xml->OrderStatusList->OrderStatus)) {
+            foreach ($xml->OrderStatusList->OrderStatus as $status) {
+                $enumValue = (string) ($status->EnumValue ?? '');
+                $description = (string) ($status->StatusDescription ?? '');
+
+                if ($enumValue !== '' && $description !== '') {
+                    // If multiple statuses have same enum value, use the first one
+                    if (!isset($descriptions[$enumValue])) {
+                        $descriptions[$enumValue] = $description;
+                    }
+                }
+            }
+        }
+
+        return $descriptions;
+    }
+
+    private function updateOrderStatus(\SimpleXMLElement $orderNode, array $statusDescriptions): void
+    {
+        $orderNumber = (string) ($orderNode->OrderNumber ?? '');
+        $statusEnumValue = (string) ($orderNode->StatusEnumValue ?? '');
+
+        if (empty($orderNumber)) {
             return;
         }
 
-        $magentoStatus = $this->statusMapping[$venditStatusId];
-        $magentoState = $this->getOrderStateByStatus($magentoStatus);
+        // Strip 'E-' prefix that Vendit adds to order numbers
+        $magentoOrderNumber = preg_replace('/^E-/', '', $orderNumber);
 
-        $searchCriteria = $this->searchCriteriaBuilder->addFilter(OrderInterface::INCREMENT_ID, $orderNumber)->create();
+        if ($statusEnumValue === '') {
+            return;
+        }
+
+        // Get human-readable description from OrderStatusList
+        $statusDescription = $statusDescriptions[$statusEnumValue] ?? 'Unknown Status';
+
+        // Get order from Magento
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter(OrderInterface::INCREMENT_ID, $magentoOrderNumber)
+            ->create();
 
         $orders = $this->orderRepository->getList($searchCriteria);
         if ($orders->getTotalCount() === 0) {
@@ -162,10 +172,31 @@ class ImportOrderStatusXml
         $order = $orders->getFirstItem();
         $currentStatus = $order->getStatus();
 
+        // Match StatusEnumValue directly against vendit_status_id in config
+        if (!isset($this->statusMapping[$statusEnumValue])) {
+            // No mapping found - only add a comment, don't update status
+            $order->addCommentToStatusHistory(
+                sprintf(
+                    'Order status update from Vendit (no mapping configured): %s (Status Enum: %s)',
+                    $statusDescription,
+                    $statusEnumValue,
+                ),
+            );
+            $this->orderRepository->save($order);
+
+            $this->skippedOrders[] = [
+                'order_number' => $orderNumber,
+                'reason' => "No mapping for status enum: {$statusEnumValue}",
+            ];
+            return;
+        }
+
+        $magentoStatus = $this->statusMapping[$statusEnumValue];
+        $magentoState = $this->getOrderStateByStatus($magentoStatus);
+
         // Only update if status has changed
         if ($currentStatus === $magentoStatus) {
             $reason = "Status already set to: {$magentoStatus}";
-            $this->logger->debug('Status unchanged', ['order_number' => $orderNumber, 'status' => $magentoStatus]);
             $this->skippedOrders[] = [
                 'order_number' => $orderNumber,
                 'reason' => $reason,
@@ -191,7 +222,7 @@ class ImportOrderStatusXml
                     'from_status' => $currentStatus,
                     'to_status' => $magentoStatus,
                 ]);
-                $this->createShipment($order, $orderData);
+                $this->createShipment($order, $statusDescription, $statusEnumValue);
 
                 $this->logger->info('Successfully created shipment and updated order', [
                     'order_number' => $orderNumber,
@@ -202,7 +233,7 @@ class ImportOrderStatusXml
                     'order_number' => $orderNumber,
                     'old_status' => $currentStatus,
                     'new_status' => $magentoStatus,
-                    'vendit_status' => $orderData['status_description'],
+                    'vendit_status' => $statusDescription,
                     'action' => 'Created shipment',
                 ];
             } catch (\Exception $e) {
@@ -214,16 +245,12 @@ class ImportOrderStatusXml
             'order_number' => $orderNumber,
             'from_status' => $currentStatus,
             'to_status' => $magentoStatus,
-            'vendit_status' => $orderData['status_description'],
+            'vendit_status' => $statusDescription,
         ]);
 
         $order->setStatus($magentoStatus);
         $order->addCommentToStatusHistory(
-            sprintf(
-                'Order status updated from Vendit. Status: %s (Vendit Status ID: %s)',
-                $orderData['status_description'],
-                $venditStatusId,
-            ),
+            sprintf('Order status updated from Vendit: %s (Status Enum: %s)', $statusDescription, $statusEnumValue),
             $magentoStatus,
         );
 
@@ -238,7 +265,7 @@ class ImportOrderStatusXml
             'order_number' => $orderNumber,
             'old_status' => $currentStatus,
             'new_status' => $magentoStatus,
-            'vendit_status' => $orderData['status_description'],
+            'vendit_status' => $statusDescription,
         ];
     }
 
@@ -264,7 +291,7 @@ class ImportOrderStatusXml
         throw new LocalizedException(__('Invalid order status: %1', $orderStatus));
     }
 
-    private function createShipment(Order $order, array $orderData): void
+    private function createShipment(Order $order, string $statusDescription, string $statusEnumValue): void
     {
         $items = [];
         foreach ($order->getAllItems() as $orderItem) {
@@ -285,9 +312,9 @@ class ImportOrderStatusXml
         $comment = $this->commentCreationFactory->create();
         $comment->setComment(
             sprintf(
-                'Shipment automatically created from Vendit status update. Status: %s (Vendit Status ID: %s)',
-                $orderData['status_description'],
-                $orderData['vendit_status_id'],
+                'Shipment automatically created from Vendit status update: %s (Status Enum: %s)',
+                $statusDescription,
+                $statusEnumValue,
             ),
         );
         $comment->setIsVisibleOnFront(false);
