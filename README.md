@@ -4,12 +4,17 @@ Integration module for synchronizing products, stock, categories, customers, and
 
 ## Features
 
-- **Product Import**: Import products with variants, images, and attributes
 - **Stock Import**: Sync inventory levels from Vendit
-- **Category Import**: Import and map product categories
-- **Customer Import**: Sync customer data
 - **Order Export**: Export orders to Vendit
 - **Order Update Import**: Import order status updates from Vendit
+
+## Upcoming features
+
+These features are currently in development and thus disabled in the current version of this module:
+
+- **Product Import**: Import products with variants, images, and attributes
+- **Category Import**: Import and map product categories
+- **Customer Import**: Sync customer data
 - **Product Links**: Automatic import of related products and upsells
 
 ## Installation
