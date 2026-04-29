@@ -28,6 +28,12 @@
                 type="ReachDigital\Vendit\Plugin\SkipUrlGenerationAtImport"/>
     </type>
 
+    <!-- Add Vendit exported status column to admin order grid -->
+    <type name="Magento\Sales\Model\ResourceModel\Order\Grid\Collection">
+        <plugin name="venditAddExportedColumnToOrderGrid"
+                type="ReachDigital\Vendit\Plugin\AddVenditExportedColumnToOrderGrid"/>
+    </type>
+
     <!-- Cleanup unprocessed import bunches -->
     <type name="Magento\ImportExport\Model\ResourceModel\Import\Data">
         <plugin name="reachDigitalVenditCleanupUnprocessedImportDataBunches"
