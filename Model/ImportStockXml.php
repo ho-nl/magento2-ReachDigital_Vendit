@@ -11,10 +11,7 @@ namespace ReachDigital\Vendit\Model;
 use Ho\Import\Logger\Log;
 use Ho\Import\Model\ImportProfile;
 use Ho\Import\RowModifier\ItemMapperFactory;
-use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
-use Magento\Framework\Api\FilterBuilder;
-use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
 use Magento\Framework\Exception\FileSystemException;
@@ -34,9 +31,6 @@ class ImportStockXml extends ImportProfile
         private readonly ItemMapperFactory $itemMapperFactory,
         private readonly Config $config,
         private readonly Filesystem $filesystem,
-        private readonly ProductRepositoryInterface $productRepository,
-        private readonly SearchCriteriaBuilder $searchCriteriaBuilder,
-        private readonly FilterBuilder $filterBuilder,
     ) {
         parent::__construct($objectManagerFactory, $stopwatch, $consoleOutput, $log);
     }
@@ -58,24 +52,9 @@ class ImportStockXml extends ImportProfile
         // Load all stock data from XML file
         $stockItems = $this->loadStock();
 
-        // Get barcode attribute from config
-        $barcodeAttribute = $this->config->getBarcodeAttribute();
-        if (empty($barcodeAttribute)) {
-            $this->log->error('Barcode attribute not configured in system config');
-            throw new \Exception(
-                'Barcode attribute not configured. Please configure it in Stores > Configuration > Vendit > Product Attribute Mapping',
-            );
-        }
-
-        // Build barcode to SKU mapping upfront
-        $barcodeToSku = $this->buildBarcodeToSkuMapping($barcodeAttribute, array_keys($stockItems));
-
         // Map stock data to Magento product import format
         $mapping = [
-            'sku' => function ($item) use ($barcodeToSku) {
-                $barcode = $item['Barcode'] ?? null;
-                return $barcode ? $barcodeToSku[$barcode] ?? null : null;
-            },
+            'sku' => fn($item) => (string) $item['ProductId'],
             'qty' => function ($item) {
                 return isset($item['Quantity']) && is_numeric($item['Quantity']) ? (float) $item['Quantity'] : 0;
             },
@@ -97,57 +76,12 @@ class ImportStockXml extends ImportProfile
         $itemMapper->setItems($stockItems);
         $itemMapper->process();
 
-        // Filter out items without SKU (couldn't match barcode)
-        $stockItems = array_filter($stockItems, function ($item) {
-            if (empty($item['sku'])) {
-                return false;
-            }
-            return true;
-        });
+        $stockItems = array_filter($stockItems, fn($item) => !empty($item['sku']));
 
         // Save processed items for debugging
         $this->saveProcessedItems($stockItems);
 
         return $stockItems;
-    }
-
-    /**
-     * Build a mapping of barcode to SKU for all barcodes in a single query.
-     *
-     * @param string $barcodeAttribute
-     * @param array $barcodes
-     * @return array
-     */
-    private function buildBarcodeToSkuMapping(string $barcodeAttribute, array $barcodes): array
-    {
-        if (empty($barcodes)) {
-            return [];
-        }
-
-        try {
-            $filter = $this->filterBuilder
-                ->setField($barcodeAttribute)
-                ->setValue($barcodes)
-                ->setConditionType('in')
-                ->create();
-
-            $searchCriteria = $this->searchCriteriaBuilder->addFilters([$filter])->create();
-
-            $searchResults = $this->productRepository->getList($searchCriteria);
-
-            $mapping = [];
-            foreach ($searchResults->getItems() as $product) {
-                $barcode = $product->getData($barcodeAttribute);
-                if ($barcode) {
-                    $mapping[$barcode] = $product->getSku();
-                }
-            }
-
-            return $mapping;
-        } catch (\Exception $e) {
-            $this->log->error('Failed to build barcode to SKU mapping: ' . $e->getMessage());
-            return [];
-        }
     }
 
     public function loadStock(): array
@@ -176,23 +110,11 @@ class ImportStockXml extends ImportProfile
         $items = [];
         foreach ($xml->Products->Product as $productNode) {
             $productArray = json_decode(json_encode($productNode), true);
-
-            // Extract the first barcode if multiple exist
-            $barcode = null;
-            if (isset($productArray['Barcodes']['Barcode'])) {
-                if (is_array($productArray['Barcodes']['Barcode'])) {
-                    $barcode = $productArray['Barcodes']['Barcode'][0] ?? null;
-                } else {
-                    $barcode = $productArray['Barcodes']['Barcode'];
-                }
-            }
-
-            if (empty($barcode)) {
+            $productId = (string) ($productArray['ProductId'] ?? '');
+            if (empty($productId)) {
                 continue;
             }
-
-            $productArray['Barcode'] = (string) $barcode;
-            $items[$barcode] = $productArray;
+            $items[$productId] = $productArray;
         }
 
         return $items;
