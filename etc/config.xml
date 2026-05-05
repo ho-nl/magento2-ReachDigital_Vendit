@@ -32,6 +32,9 @@
             </directory_mapping>
         </vendit>
         <vendit_mapping>
+            <stock_import>
+                <sku_source>barcode</sku_source>
+            </stock_import>
             <order_status_mapping>
                 <status_mapping>{"_1761907627845_845":{"vendit_status_id":"1","vendit_status_description":"Nieuwe order","magento_status":"processing"},"_1761907797160_160":{"vendit_status_id":"8","vendit_status_description":"Uitgeleverd","magento_status":"complete"},"_1761920307416_416":{"vendit_status_id":"0","vendit_status_description":"Vervallen","magento_status":"canceled"}}</status_mapping>
             </order_status_mapping>

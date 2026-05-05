@@ -145,6 +145,14 @@
                 </field>
                 -->
             </group>
+            <group id="stock_import" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Stock Import</label>
+                <field id="sku_source" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>SKU Source</label>
+                    <source_model>ReachDigital\Vendit\Model\Config\Source\StockSkuSource</source_model>
+                    <comment><![CDATA[Select which field from the Vendit stock XML to use as the product SKU. Use <strong>Barcode</strong> when the Magento SKU matches the EAN/barcode value rather than the Vendit ProductId.]]></comment>
+                </field>
+            </group>
             <group id="order_status_mapping" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Order Status Mapping</label>
                 <comment><![CDATA[Map Vendit order statuses to Magento order statuses. This is used by the order update import.]]></comment>

@@ -34,6 +34,11 @@ class Config
     const XML_PATH_TAX_CLASS_ID = 'vendit_mapping/attribute_mapping/tax_class_id';
     const XML_PATH_ORDER_STATUS_MAPPING = 'vendit_mapping/order_status_mapping/status_mapping';
 
+    const XML_PATH_STOCK_SKU_SOURCE = 'vendit_mapping/stock_import/sku_source';
+
+    const STOCK_SKU_SOURCE_PRODUCT_ID = 'product_id';
+    const STOCK_SKU_SOURCE_BARCODE = 'barcode';
+
     const BASE_DIRECTORY = 'vendit';
 
     const TYPE_CATEGORY = 'category';
@@ -284,6 +289,11 @@ class Config
     public function getBarcodeAttribute(): ?string
     {
         return $this->scopeConfig->getValue(self::XML_PATH_BARCODE_ATTRIBUTE);
+    }
+
+    public function getStockSkuSource(): string
+    {
+        return (string) ($this->scopeConfig->getValue(self::XML_PATH_STOCK_SKU_SOURCE) ?? self::STOCK_SKU_SOURCE_PRODUCT_ID);
     }
 
     public function getTaxClassId(): ?int

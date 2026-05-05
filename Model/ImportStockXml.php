@@ -53,8 +53,18 @@ class ImportStockXml extends ImportProfile
         $stockItems = $this->loadStock();
 
         // Map stock data to Magento product import format
+        $useBarcode = $this->config->getStockSkuSource() === Config::STOCK_SKU_SOURCE_BARCODE;
         $mapping = [
-            'sku' => fn($item) => (string) $item['ProductId'],
+            'sku' => function ($item) use ($useBarcode) {
+                if ($useBarcode) {
+                    $barcode = $item['Barcodes']['Barcode'] ?? null;
+                    if (is_array($barcode)) {
+                        $barcode = $barcode[0] ?? null;
+                    }
+                    return (string) ($barcode ?? $item['ProductId']);
+                }
+                return (string) $item['ProductId'];
+            },
             'qty' => function ($item) {
                 return isset($item['Quantity']) && is_numeric($item['Quantity']) ? (float) $item['Quantity'] : 0;
             },
