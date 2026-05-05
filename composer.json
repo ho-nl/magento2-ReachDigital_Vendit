@@ -1,6 +1,5 @@
 {
   "name": "reach-digital/magento2-vendit",
-  "version": "1.0.0",
   "description": "Vendit Magento 2 Connector",
   "require": {
     "php": "~8.2",
