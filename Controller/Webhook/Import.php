@@ -8,17 +8,14 @@ declare(strict_types=1);
 
 namespace ReachDigital\Vendit\Controller\Webhook;
 
-use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\CsrfAwareActionInterface;
-use Magento\Framework\App\Request\InvalidRequestException;
-use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\Result\Json;
 use Psr\Log\LoggerInterface;
-use ReachDigital\Vendit\Model\MoveImportFiles;
 use ReachDigital\Vendit\Model\Config;
+use ReachDigital\Vendit\Model\MoveImportFiles;
 
-class Import implements HttpPostActionInterface, CsrfAwareActionInterface
+class Import implements HttpGetActionInterface
 {
     public function __construct(
         private readonly JsonFactory $jsonFactory,
@@ -68,13 +65,4 @@ class Import implements HttpPostActionInterface, CsrfAwareActionInterface
         }
     }
 
-    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
-    {
-        return null;
-    }
-
-    public function validateForCsrf(RequestInterface $request): ?bool
-    {
-        return true;
-    }
 }
