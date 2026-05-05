@@ -14,6 +14,7 @@ use Ho\Import\RowModifier\ItemMapperFactory;
 use Magento\Catalog\Model\Product;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem;
 use Magento\ImportExport\Model\Import;
@@ -31,6 +32,7 @@ class ImportStockXml extends ImportProfile
         private readonly ItemMapperFactory $itemMapperFactory,
         private readonly Config $config,
         private readonly Filesystem $filesystem,
+        private readonly ResourceConnection $resourceConnection,
     ) {
         parent::__construct($objectManagerFactory, $stopwatch, $consoleOutput, $log);
     }
@@ -88,6 +90,22 @@ class ImportStockXml extends ImportProfile
 
         $stockItems = array_filter($stockItems, fn($item) => !empty($item['sku']));
 
+        // Filter out items whose SKU does not exist in Magento
+        $skus = array_column(array_values($stockItems), 'sku');
+        $existingSkus = $this->getExistingSkus($skus);
+        $skipped = 0;
+        $stockItems = array_filter($stockItems, function ($item) use ($existingSkus, &$skipped) {
+            if (!isset($existingSkus[$item['sku']])) {
+                $skipped++;
+                return false;
+            }
+            return true;
+        });
+
+        if ($skipped > 0) {
+            $this->log->info("Stock import: skipped {$skipped} item(s) with no matching Magento product.");
+        }
+
         // Save processed items for debugging
         $this->saveProcessedItems($stockItems);
 
@@ -128,6 +146,27 @@ class ImportStockXml extends ImportProfile
         }
 
         return $items;
+    }
+
+    /**
+     * Return a map of sku => true for all given SKUs that exist in catalog_product_entity.
+     *
+     * @param string[] $skus
+     * @return array<string, true>
+     */
+    public function getExistingSkus(array $skus): array
+    {
+        if (empty($skus)) {
+            return [];
+        }
+
+        $connection = $this->resourceConnection->getConnection();
+        $table = $this->resourceConnection->getTableName('catalog_product_entity');
+        $rows = $connection->fetchCol(
+            $connection->select()->from($table, ['sku'])->where('sku IN (?)', $skus),
+        );
+
+        return array_fill_keys($rows, true);
     }
 
     /**
