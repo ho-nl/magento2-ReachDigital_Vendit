@@ -31,6 +31,7 @@ class Config
     const XML_PATH_SIZE_ATTRIBUTE = 'vendit_mapping/attribute_mapping/size_attribute';
     const XML_PATH_COLOR_ATTRIBUTE = 'vendit_mapping/attribute_mapping/color_attribute';
     const XML_PATH_BARCODE_ATTRIBUTE = 'vendit_mapping/attribute_mapping/barcode_attribute';
+    const XML_PATH_BARCODE_FALLBACK_TO_SKU = 'vendit_mapping/attribute_mapping/barcode_fallback_to_sku';
     const XML_PATH_TAX_CLASS_ID = 'vendit_mapping/attribute_mapping/tax_class_id';
     const XML_PATH_ORDER_STATUS_MAPPING = 'vendit_mapping/order_status_mapping/status_mapping';
 
@@ -289,6 +290,11 @@ class Config
     public function getBarcodeAttribute(): ?string
     {
         return $this->scopeConfig->getValue(self::XML_PATH_BARCODE_ATTRIBUTE);
+    }
+
+    public function isBarcodeAttributeFallbackToSkuEnabled(): bool
+    {
+        return (bool) $this->scopeConfig->getValue(self::XML_PATH_BARCODE_FALLBACK_TO_SKU);
     }
 
     public function getStockSkuSource(): string

@@ -124,6 +124,11 @@
                     <source_model>ReachDigital\Vendit\Model\Config\Source\ProductAttributes</source_model>
                     <validate>required</validate>
                 </field>
+                <field id="barcode_fallback_to_sku" translate="label comment" type="select" sortOrder="21" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Fallback to SKU</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[When enabled, the product SKU is used as the EAN value in order exports if the barcode attribute is empty.]]></comment>
+                </field>
                 <!-- @todo Disabled in v1.0 — not yet ready for production -->
                 <!--
                 <field id="tax_class_id" translate="label comment" type="select" sortOrder="25" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">

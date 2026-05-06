@@ -186,6 +186,9 @@ class ExportOrdersXml
 
             // EAN/Barcode — primary identifier when GUID+ProductId are unavailable
             $ean = $barcodeAttribute && $product ? (string) $product->getData($barcodeAttribute) : '';
+            if ($ean === '' && $this->venditConfig->isBarcodeAttributeFallbackToSkuEnabled()) {
+                $ean = $item->getSku();
+            }
             $productNode->appendChild($doc->createElement('EAN', $ean));
 
             // Unit prices (not totals)

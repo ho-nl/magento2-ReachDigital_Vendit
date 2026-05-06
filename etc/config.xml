@@ -42,6 +42,7 @@
                 <size_attribute>vendit_size</size_attribute>
                 <color_attribute>vendit_color</color_attribute>
                 <barcode_attribute>vendit_barcode</barcode_attribute>
+                <barcode_fallback_to_sku>1</barcode_fallback_to_sku>
                 <tax_class_id>2</tax_class_id>
             </attribute_mapping>
         </vendit_mapping>
