@@ -17,12 +17,13 @@ use Magento\Framework\Serialize\SerializerInterface;
 class Config
 {
     const XML_PATH_ENABLED = 'vendit/general/enabled';
-    const XML_PATH_ENABLE_PRODUCT_IMPORT = 'vendit/general/enable_product_import';
-    const XML_PATH_ENABLE_STOCK_IMPORT = 'vendit/general/enable_stock_import';
-    const XML_PATH_ENABLE_CATEGORY_IMPORT = 'vendit/general/enable_category_import';
-    const XML_PATH_ENABLE_CUSTOMER_IMPORT = 'vendit/general/enable_customer_import';
-    const XML_PATH_ENABLE_ORDER_UPDATE_IMPORT = 'vendit/general/enable_order_update_import';
-    const XML_PATH_ENABLE_ORDER_EXPORT = 'vendit/general/enable_order_export';
+    const XML_PATH_ENABLE_PRODUCT_IMPORT = 'vendit/product_import/enable_product_import';
+    const XML_PATH_ENABLE_STOCK_IMPORT = 'vendit/stock_import/enable_stock_import';
+    const XML_PATH_ENABLE_CATEGORY_IMPORT = 'vendit/category_import/enable_category_import';
+    const XML_PATH_ENABLE_CUSTOMER_IMPORT = 'vendit/customer_import/enable_customer_import';
+    const XML_PATH_ENABLE_ORDER_UPDATE_IMPORT = 'vendit/order_update_import/enable_order_update_import';
+    const XML_PATH_ENABLE_ORDER_EXPORT = 'vendit/order_export/enable_order_export';
+    const XML_PATH_EXPORT_XML_RETENTION_MONTHS = 'vendit/order_export/export_xml_retention_months';
 
     const DIR_MAPPING_CONFIG_PATH = 'vendit/directory_mapping';
 
@@ -92,6 +93,20 @@ class Config
     public function isOrderExportEnabled(): bool
     {
         return $this->isEnabled() && (bool) $this->scopeConfig->getValue(self::XML_PATH_ENABLE_ORDER_EXPORT);
+    }
+
+    /**
+     * Returns the number of months to retain export XML, or null when cleanup is disabled (0 or empty).
+     */
+    public function getExportXmlRetentionMonths(): ?int
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_EXPORT_XML_RETENTION_MONTHS);
+
+        if ($value === null || $value === '' || (int) $value === 0) {
+            return null;
+        }
+
+        return (int) $value;
     }
 
     public function getImportFilesDirectory(): string

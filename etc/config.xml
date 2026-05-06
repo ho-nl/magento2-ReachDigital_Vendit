@@ -8,13 +8,26 @@
         <vendit>
             <general>
                 <enabled>0</enabled>
-                <enable_product_import>1</enable_product_import>
-                <enable_stock_import>1</enable_stock_import>
-                <enable_category_import>1</enable_category_import>
-                <enable_customer_import>1</enable_customer_import>
-                <enable_order_update_import>1</enable_order_update_import>
-                <enable_order_export>1</enable_order_export>
             </general>
+            <product_import>
+                <enable_product_import>1</enable_product_import>
+            </product_import>
+            <stock_import>
+                <enable_stock_import>1</enable_stock_import>
+            </stock_import>
+            <category_import>
+                <enable_category_import>1</enable_category_import>
+            </category_import>
+            <customer_import>
+                <enable_customer_import>1</enable_customer_import>
+            </customer_import>
+            <order_update_import>
+                <enable_order_update_import>1</enable_order_update_import>
+            </order_update_import>
+            <order_export>
+                <enable_order_export>1</enable_order_export>
+                <export_xml_retention_months>3</export_xml_retention_months>
+            </order_export>
             <directory_mapping>
                 <import>
                     <file_path>import/files</file_path>

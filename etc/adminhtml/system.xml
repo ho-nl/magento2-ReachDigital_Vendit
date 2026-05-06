@@ -23,38 +23,64 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[Enable or disable the complete Vendit integration.]]></comment>
                 </field>
-                <!-- @todo Disabled in v1.0 — not yet ready for production -->
-                <!--
+            </group>
+            <!-- @todo Disabled in v1.0 — not yet ready for production -->
+            <!--
+            <group id="product_import" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Product Import</label>
                 <field id="enable_product_import" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Product Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                -->
+            </group>
+            -->
+            <group id="stock_import" translate="label" type="text" sortOrder="110" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Stock Import</label>
                 <field id="enable_stock_import" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Stock Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <!-- @todo Disabled in v1.0 — not yet ready for production -->
-                <!--
+            </group>
+            <!-- @todo Disabled in v1.0 — not yet ready for production -->
+            <!--
+            <group id="category_import" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Category Import</label>
                 <field id="enable_category_import" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Category Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+            </group>
+            -->
+            <!-- @todo Disabled in v1.0 — not yet ready for production -->
+            <!--
+            <group id="customer_import" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Customer Import</label>
                 <field id="enable_customer_import" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Customer Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                -->
+            </group>
+            -->
+            <group id="order_update_import" translate="label" type="text" sortOrder="140" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Order Update Import</label>
                 <field id="enable_order_update_import" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Order Update Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+            </group>
+            <group id="order_export" translate="label" type="text" sortOrder="150" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Order Export</label>
                 <field id="enable_order_export" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Enable Order Export</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="export_xml_retention_months" translate="label comment" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Export XML Retention (Months)</label>
+                    <comment><![CDATA[Number of months to keep the exported order XML in the database. Set to 0 or leave empty to disable automatic cleanup.]]></comment>
+                    <validate>validate-zero-or-greater validate-digits</validate>
+                </field>
             </group>
-            <group id="directory_mapping" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="directory_mapping" translate="label" type="text" sortOrder="900" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Directory Mapping</label>
                 <field id="var_directory_info" translate="label" type="label" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Base Directory</label>

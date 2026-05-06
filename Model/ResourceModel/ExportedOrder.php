@@ -34,6 +34,22 @@ class ExportedOrder
         );
     }
 
+    /**
+     * Clear export_xml for orders exported more than $months months ago.
+     * Returns the number of affected rows.
+     */
+    public function clearOldExportXml(int $months): int
+    {
+        $connection = $this->resource->getConnection();
+        $cutoff = (new \DateTime())->modify("-{$months} months")->format('Y-m-d H:i:s');
+
+        return $connection->update(
+            self::TABLE,
+            ['export_xml' => null],
+            ['exported_at < ?' => $cutoff, 'export_xml IS NOT NULL'],
+        );
+    }
+
     public function getAllExportedOrderIds(): array
     {
         $connection = $this->resource->getConnection();

@@ -32,5 +32,8 @@
         <job name="vendit_export_orders" instance="ReachDigital\Vendit\Cron\ExportOrders" method="execute">
             <schedule>*/5 * * * *</schedule>
         </job>
+        <job name="vendit_cleanup_export_xml" instance="ReachDigital\Vendit\Cron\CleanupExportXml" method="execute">
+            <schedule>0 2 * * *</schedule>
+        </job>
     </group>
 </config>
