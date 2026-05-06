@@ -163,72 +163,50 @@ class ExportOrdersXml
         // Products
         $productsNode = $doc->createElement('Products');
         foreach ($order->getAllVisibleItems() as $item) {
-            // For configurable products, get the actual child product that was ordered
-            // $item->getProduct() returns the parent, we need the actual variant
             $product = $item->getProduct();
 
-            // Check if this is a child of a configurable product
             if ($product && $product->getTypeId() === 'configurable') {
-                // Load the actual simple product by SKU
                 try {
                     $product = $this->productRepository->get($item->getSku());
-                } catch (\Exception $e) {
-                    // If we can't load it, continue with the parent
+                } catch (\Exception) {
+                    // Fall back to parent product
                 }
             }
 
             $barcodeAttribute = $this->venditConfig->getBarcodeAttribute();
-
             $productNode = $doc->createElement('Product');
 
-            // Add EcommerceProductGuid if available (stored in vendit_product_guid attribute)
-            $guid = '';
-            if ($product) {
-                $guid = (string) $product->getData('vendit_product_guid');
+            // EcommerceProductGuid and ProductId must only be included together as a valid pair.
+            // If the GUID is not stored on the product, omit both and identify via EAN only.
+            $guid = $product ? (string) $product->getData('vendit_product_guid') : '';
+            if ($guid !== '') {
+                $productNode->appendChild($doc->createElement('EcommerceProductGuid', $guid));
+                $productNode->appendChild($doc->createElement('ProductId', $item->getSku()));
             }
-            $productNode->appendChild($doc->createElement('EcommerceProductGuid', $guid));
 
-            // ProductId is the SKU in Vendit
-            $productNode->appendChild($doc->createElement('ProductId', $item->getSku()));
-
-            // SKU field for compatibility
-            $productNode->appendChild($doc->createElement('Sku', $item->getSku()));
-
-            // Product name/description
-            $productNode->appendChild($doc->createElement('Name', htmlentities($item->getName())));
-            $productNode->appendChild($doc->createElement('Description', htmlentities($item->getName())));
-
-            // EAN/Barcode
-            $ean = '';
-            if ($barcodeAttribute && $product) {
-                $ean = (string) $product->getData($barcodeAttribute);
-            }
+            // EAN/Barcode — primary identifier when GUID+ProductId are unavailable
+            $ean = $barcodeAttribute && $product ? (string) $product->getData($barcodeAttribute) : '';
             $productNode->appendChild($doc->createElement('EAN', $ean));
 
-            // Quantity
-            $productNode->appendChild($doc->createElement('Qty', $this->formatDecimal($item->getQtyOrdered())));
-            $productNode->appendChild($doc->createElement('Quantity', $this->formatDecimal($item->getQtyOrdered())));
-
-            // Prices
-            $productNode->appendChild($doc->createElement('Price', $this->formatDecimal($item->getPriceInclTax())));
-            $productNode->appendChild(
-                $doc->createElement('ProductSalesPriceInc', $this->formatDecimal($item->getPriceInclTax())),
-            );
+            // Unit prices (not totals)
             $productNode->appendChild(
                 $doc->createElement('ProductSalesPriceEx', $this->formatDecimal($item->getPrice())),
             );
-
-            // Row totals
             $productNode->appendChild(
-                $doc->createElement('RowTotal', $this->formatDecimal($item->getRowTotalInclTax())),
+                $doc->createElement('ProductSalesPriceInc', $this->formatDecimal($item->getPriceInclTax())),
             );
 
-            // Tax information
-            $productNode->appendChild($doc->createElement('VatPercent', $this->formatDecimal($item->getTaxPercent())));
+            // @todo Implement supporting PrivateCopyLevy (thuiskopieheffing) for specific product categories
 
-            // Additional fields that might be needed
+            $productNode->appendChild($doc->createElement('Quantity', $this->formatDecimal($item->getQtyOrdered())));
             $productNode->appendChild($doc->createElement('Remarks', ''));
-            $productNode->appendChild($doc->createElement('PrivateCopyLevy', '0.0000'));
+            $productNode->appendChild($doc->createElement('OfficeId', '1'));
+            $productNode->appendChild($doc->createElement('ReserveStock', 'true'));
+
+            // Description is optional but used by Vendit as fallback when product cannot be matched
+            $productNode->appendChild($doc->createElement('Description', htmlentities($item->getName())));
+
+            $productNode->appendChild($doc->createElement('IsDropshipment', 'false'));
 
             $productsNode->appendChild($productNode);
         }
