@@ -19,7 +19,7 @@ class ExportedOrder
     ) {
     }
 
-    public function markOrderAsExported(string $orderIncrementId): void
+    public function markOrderAsExported(string $orderIncrementId, string $exportXml = ''): void
     {
         $connection = $this->resource->getConnection();
 
@@ -27,9 +27,10 @@ class ExportedOrder
             self::TABLE,
             [
                 'order_increment_id' => $orderIncrementId,
-                'exported_at' => (new \DateTime())->format('Y-m-d H:i:s')
+                'exported_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+                'export_xml' => $exportXml,
             ],
-            ['exported_at']
+            ['exported_at', 'export_xml'],
         );
     }
 

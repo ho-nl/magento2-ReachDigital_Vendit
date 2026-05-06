@@ -42,10 +42,10 @@ class ExportOrdersXml
 
         foreach ($orderRepository->getItems() as $order) {
             // Create separate XML file for each order
-            $this->exportSingleOrder($order, $exportTimestamp);
+            $xml = $this->exportSingleOrder($order, $exportTimestamp);
 
-            // Mark order as exported
-            $this->exportedOrderResource->markOrderAsExported((string) $order->getIncrementId());
+            // Mark order as exported and store XML backup in DB
+            $this->exportedOrderResource->markOrderAsExported((string) $order->getIncrementId(), $xml);
 
             $i++;
         }
@@ -53,7 +53,7 @@ class ExportOrdersXml
         return $i;
     }
 
-    private function exportSingleOrder($order, string $exportTimestamp): void
+    private function exportSingleOrder($order, string $exportTimestamp): string
     {
         $doc = new \DOMDocument('1.0', 'utf-8');
         $doc->formatOutput = true;
@@ -79,6 +79,8 @@ class ExportOrdersXml
 
         $xml = $doc->saveXML();
         file_put_contents($filePath, $xml);
+
+        return $xml;
     }
 
     public function addOrderToXml(\DOMDocument $doc, \DOMElement $parentNode, $order): void

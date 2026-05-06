@@ -8,6 +8,7 @@
     <table name="reachdigital_vendit_exported_orders" resource="default" engine="innodb" comment="Vendit Exported Orders">
         <column xsi:type="varchar" name="order_increment_id" nullable="false" length="50" comment="Increment ID"/>
         <column name="exported_at" xsi:type="datetime" nullable="false" comment="Exported At"/>
+        <column name="export_xml" xsi:type="mediumtext" nullable="true" comment="Exported XML"/>
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="order_increment_id"/>
         </constraint>
