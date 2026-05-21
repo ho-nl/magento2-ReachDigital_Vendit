@@ -237,7 +237,10 @@ class ImportOrderStatusXml
                     'action' => 'Created shipment',
                 ];
             } catch (\Exception $e) {
-                throw new \Exception('Failed to create shipment: ' . $e->getMessage());
+                $errorMessage = 'Failed to create shipment from Vendit status update: ' . $e->getMessage();
+                $order->addCommentToStatusHistory($errorMessage);
+                $this->orderRepository->save($order);
+                throw new \Exception($errorMessage);
             }
         }
 
