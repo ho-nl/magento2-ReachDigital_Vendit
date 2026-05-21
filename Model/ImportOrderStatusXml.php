@@ -19,6 +19,7 @@ use Magento\Sales\Api\Data\ShipmentItemCreationInterfaceFactory;
 use Magento\Sales\Api\Data\ShipmentCommentCreationInterfaceFactory;
 use Magento\Sales\Model\ResourceModel\Order\Status\CollectionFactory as StatusCollectionFactory;
 use ReachDigital\Vendit\Logger\OrderStatusLogger;
+use ReachDigital\Vendit\Model\ResourceModel\ImportedOrderStatus;
 
 class ImportOrderStatusXml
 {
@@ -36,6 +37,7 @@ class ImportOrderStatusXml
         private readonly ShipmentCommentCreationInterfaceFactory $commentCreationFactory,
         private readonly OrderStatusLogger $logger,
         private readonly StatusCollectionFactory $statusCollectionFactory,
+        private readonly ImportedOrderStatus $importedOrderStatus,
     ) {
     }
 
@@ -150,6 +152,14 @@ class ImportOrderStatusXml
             return;
         }
 
+        if ($this->importedOrderStatus->hasBeenProcessed($magentoOrderNumber, $statusEnumValue)) {
+            $this->logger->info('Skipping already-processed Vendit status', [
+                'order_number' => $orderNumber,
+                'status_enum' => $statusEnumValue,
+            ]);
+            return;
+        }
+
         // Get human-readable description from OrderStatusList
         $statusDescription = $statusDescriptions[$statusEnumValue] ?? 'Unknown Status';
 
@@ -183,6 +193,7 @@ class ImportOrderStatusXml
                 ),
             );
             $this->orderRepository->save($order);
+            $this->importedOrderStatus->markAsProcessed($magentoOrderNumber, $statusEnumValue);
 
             $this->skippedOrders[] = [
                 'order_number' => $orderNumber,
@@ -258,6 +269,7 @@ class ImportOrderStatusXml
         );
 
         $this->orderRepository->save($order);
+        $this->importedOrderStatus->markAsProcessed($magentoOrderNumber, $statusEnumValue);
 
         $this->logger->info('Successfully updated order status', [
             'order_number' => $orderNumber,

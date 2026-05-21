@@ -16,4 +16,18 @@
             <column name="order_increment_id"/>
         </index>
     </table>
+    <table name="reachdigital_vendit_imported_order_statuses" resource="default" engine="innodb"
+           comment="Tracks Vendit order status updates that have been successfully applied">
+        <column name="id" xsi:type="int" padding="10" unsigned="true" nullable="false" identity="true" comment="ID"/>
+        <column name="order_increment_id" xsi:type="varchar" length="50" nullable="false" comment="Magento Order Increment ID"/>
+        <column name="vendit_status_enum_value" xsi:type="varchar" length="10" nullable="false" comment="Vendit Status Enum Value"/>
+        <column name="imported_at" xsi:type="datetime" nullable="false" comment="Imported At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="VENDIT_IMPORTED_STATUS_ORDER_ENUM_UNIQUE">
+            <column name="order_increment_id"/>
+            <column name="vendit_status_enum_value"/>
+        </constraint>
+    </table>
 </schema>
