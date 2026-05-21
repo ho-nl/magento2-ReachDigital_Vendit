@@ -103,13 +103,13 @@ class ExportOrdersXml
         );
         $orderNode->appendChild($doc->createElement('PaymentCosts', $this->formatDecimal(0.0)));
         $orderNode->appendChild($doc->createElement('Paid', $this->formatDecimal($order->getTotalPaid())));
-        $orderNode->appendChild($doc->createElement('ShippingMethod', $order->getShippingDescription()));
+        $orderNode->appendChild($this->createCDataElement($doc, 'ShippingMethod', $order->getShippingDescription()));
         $orderNode->appendChild(
             $doc->createElement('ShippingCosts', $this->formatDecimal($order->getShippingInclTax())),
         );
 
         // Discount
-        $orderNode->appendChild($doc->createElement('InvoiceDiscountName', $order->getDiscountDescription() ?: ''));
+        $orderNode->appendChild($this->createCDataElement($doc, 'InvoiceDiscountName', $order->getDiscountDescription() ?: ''));
         $orderNode->appendChild(
             $doc->createElement(
                 'InvoiceDiscountAmount',
@@ -120,21 +120,21 @@ class ExportOrdersXml
         // Invoice (billing) address
         $billing = $order->getBillingAddress();
         if ($billing) {
-            $orderNode->appendChild($doc->createElement('Title', $billing->getPrefix() ?: ''));
-            $orderNode->appendChild($doc->createElement('FirstName', $billing->getFirstname()));
-            $orderNode->appendChild($doc->createElement('MiddleName', $billing->getMiddlename() ?: ''));
-            $orderNode->appendChild($doc->createElement('LastName', $billing->getLastname()));
-            $orderNode->appendChild($doc->createElement('CompanyName', $billing->getCompany() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'Title', $billing->getPrefix() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'FirstName', $billing->getFirstname()));
+            $orderNode->appendChild($this->createCDataElement($doc, 'MiddleName', $billing->getMiddlename() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'LastName', $billing->getLastname()));
+            $orderNode->appendChild($this->createCDataElement($doc, 'CompanyName', $billing->getCompany() ?: ''));
             $orderNode->appendChild($doc->createElement('EmailAddress', $order->getCustomerEmail()));
             $orderNode->appendChild($doc->createElement('Phone', $billing->getTelephone()));
             $orderNode->appendChild($doc->createElement('PhoneMobile', $billing->getTelephone()));
-            $orderNode->appendChild($doc->createElement('InvoiceAddress', $billing->getStreetLine(1)));
+            $orderNode->appendChild($this->createCDataElement($doc, 'InvoiceAddress', $billing->getStreetLine(1)));
             $orderNode->appendChild($doc->createElement('InvoiceHousenumber', $billing->getStreetLine(2) ?: ''));
             $orderNode->appendChild(
                 $doc->createElement('InvoiceHousenumberExtension', $billing->getStreetLine(3) ?: ''),
             );
             $orderNode->appendChild($doc->createElement('InvoiceZipcode', $billing->getPostcode()));
-            $orderNode->appendChild($doc->createElement('InvoiceCity', $billing->getCity()));
+            $orderNode->appendChild($this->createCDataElement($doc, 'InvoiceCity', $billing->getCity()));
             $orderNode->appendChild($doc->createElement('InvoiceCountry', $billing->getCountryId()));
             $orderNode->appendChild($doc->createElement('InvoiceCountryCode', $billing->getCountryId()));
         }
@@ -146,18 +146,18 @@ class ExportOrdersXml
         // Delivery (shipping) address
         $shipping = $order->getShippingAddress();
         if ($shipping) {
-            $orderNode->appendChild($doc->createElement('DeliveryTitle', $shipping->getPrefix() ?: ''));
-            $orderNode->appendChild($doc->createElement('DeliveryFirstName', $shipping->getFirstname() ?: ''));
-            $orderNode->appendChild($doc->createElement('DeliveryMiddleName', $shipping->getMiddlename() ?: ''));
-            $orderNode->appendChild($doc->createElement('DeliveryLastName', $shipping->getLastname() ?: ''));
-            $orderNode->appendChild($doc->createElement('DeliveryCompanyName', $shipping->getCompany() ?: ''));
-            $orderNode->appendChild($doc->createElement('DeliveryAddress', $shipping->getStreetLine(1) ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryTitle', $shipping->getPrefix() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryFirstName', $shipping->getFirstname() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryMiddleName', $shipping->getMiddlename() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryLastName', $shipping->getLastname() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryCompanyName', $shipping->getCompany() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryAddress', $shipping->getStreetLine(1) ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryHousenumber', $shipping->getStreetLine(2) ?: ''));
             $orderNode->appendChild(
                 $doc->createElement('DeliveryHousenumberExtension', $shipping->getStreetLine(3) ?: ''),
             );
             $orderNode->appendChild($doc->createElement('DeliveryZipcode', $shipping->getPostcode() ?: ''));
-            $orderNode->appendChild($doc->createElement('DeliveryCity', $shipping->getCity() ?: ''));
+            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryCity', $shipping->getCity() ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryCountry', $shipping->getCountryId() ?: ''));
             $orderNode->appendChild($doc->createElement('DeliveryCountryCode', $shipping->getCountryId() ?: ''));
         }
@@ -209,7 +209,7 @@ class ExportOrdersXml
             $productNode->appendChild($doc->createElement('ReserveStock', 'true'));
 
             // Description is optional but used by Vendit as fallback when product cannot be matched
-            $productNode->appendChild($doc->createElement('Description', htmlentities($item->getName())));
+            $productNode->appendChild($this->createCDataElement($doc, 'Description', $item->getName()));
 
             $productNode->appendChild($doc->createElement('IsDropshipment', 'false'));
 
@@ -247,6 +247,13 @@ class ExportOrdersXml
     {
         $filePath = $this->venditConfig->getOrderExportFilePath();
         return dirname($filePath);
+    }
+
+    private function createCDataElement(\DOMDocument $doc, string $name, string $value): \DOMElement
+    {
+        $element = $doc->createElement($name);
+        $element->appendChild($doc->createCDATASection($value));
+        return $element;
     }
 
     private function formatDecimal(float|string|null $value): string
