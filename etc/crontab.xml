@@ -13,7 +13,7 @@
         -->
 
         <job name="vendit_process_stock_import" instance="ReachDigital\Vendit\Cron\ProcessStockImport" method="execute">
-            <schedule>*/5 * * * *</schedule>
+            <schedule>0 * * * *</schedule>
         </job>
 
         <!-- @todo Disabled in v1.0 — not yet ready for production -->
