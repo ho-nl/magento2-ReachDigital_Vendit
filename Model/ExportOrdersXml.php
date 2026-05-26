@@ -109,7 +109,9 @@ class ExportOrdersXml
         );
 
         // Discount
-        $orderNode->appendChild($this->createCDataElement($doc, 'InvoiceDiscountName', $order->getDiscountDescription() ?: ''));
+        $orderNode->appendChild(
+            $this->createCDataElement($doc, 'InvoiceDiscountName', $order->getDiscountDescription() ?: ''),
+        );
         $orderNode->appendChild(
             $doc->createElement(
                 'InvoiceDiscountAmount',
@@ -126,8 +128,8 @@ class ExportOrdersXml
             $orderNode->appendChild($this->createCDataElement($doc, 'LastName', $billing->getLastname()));
             $orderNode->appendChild($this->createCDataElement($doc, 'CompanyName', $billing->getCompany() ?: ''));
             $orderNode->appendChild($doc->createElement('EmailAddress', $order->getCustomerEmail()));
-            $orderNode->appendChild($doc->createElement('Phone', $billing->getTelephone()));
-            $orderNode->appendChild($doc->createElement('PhoneMobile', $billing->getTelephone()));
+            $orderNode->appendChild($doc->createElement('Phone', $billing->getTelephone() ?: ''));
+            $orderNode->appendChild($doc->createElement('PhoneMobile', $billing->getTelephone() ?: ''));
             $orderNode->appendChild($this->createCDataElement($doc, 'InvoiceAddress', $billing->getStreetLine(1)));
             $orderNode->appendChild($doc->createElement('InvoiceHousenumber', $billing->getStreetLine(2) ?: ''));
             $orderNode->appendChild(
@@ -147,11 +149,21 @@ class ExportOrdersXml
         $shipping = $order->getShippingAddress();
         if ($shipping) {
             $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryTitle', $shipping->getPrefix() ?: ''));
-            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryFirstName', $shipping->getFirstname() ?: ''));
-            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryMiddleName', $shipping->getMiddlename() ?: ''));
-            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryLastName', $shipping->getLastname() ?: ''));
-            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryCompanyName', $shipping->getCompany() ?: ''));
-            $orderNode->appendChild($this->createCDataElement($doc, 'DeliveryAddress', $shipping->getStreetLine(1) ?: ''));
+            $orderNode->appendChild(
+                $this->createCDataElement($doc, 'DeliveryFirstName', $shipping->getFirstname() ?: ''),
+            );
+            $orderNode->appendChild(
+                $this->createCDataElement($doc, 'DeliveryMiddleName', $shipping->getMiddlename() ?: ''),
+            );
+            $orderNode->appendChild(
+                $this->createCDataElement($doc, 'DeliveryLastName', $shipping->getLastname() ?: ''),
+            );
+            $orderNode->appendChild(
+                $this->createCDataElement($doc, 'DeliveryCompanyName', $shipping->getCompany() ?: ''),
+            );
+            $orderNode->appendChild(
+                $this->createCDataElement($doc, 'DeliveryAddress', $shipping->getStreetLine(1) ?: ''),
+            );
             $orderNode->appendChild($doc->createElement('DeliveryHousenumber', $shipping->getStreetLine(2) ?: ''));
             $orderNode->appendChild(
                 $doc->createElement('DeliveryHousenumberExtension', $shipping->getStreetLine(3) ?: ''),
