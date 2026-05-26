@@ -195,9 +195,9 @@
                     order updates XML file (<code>StatusEnumValue</code> field in the <code>&lt;Order&gt;</code> element). Optional: add the Vendit Status Description for future reference (found in <code>OrderStatusList</code>).<br/>
                     The Magento statuses are grouped by order state.<br/>
                     <b>Note:</b> When a Vendit status enum is not mapped here, only a comment will be added to the order in Magento - the status will remain unchanged.<br/>
-                    <b style="color: #eb5202">Important note:</b> By default, the 'Uitgeleverd' Vendit status (Enum: 8) is linked to the 'complete' status.
+                    <b style="color: #eb5202">Important note:</b> By default, the 'Gefactureerd' Vendit status (Enum: 9) is linked to the 'complete' status.
                     This means that a shipment is created in Magento to complete the order. If the order should remain processing in Magento, please
-                    link the 'Uitgeleverd' Vendit status to the 'processing' Magento status instead.]]></comment>
+                    link the 'Gefactureerd' Vendit status to the 'processing' Magento status instead, or completely remove the mapping rule.]]></comment>
                 </field>
             </group>
         </section>

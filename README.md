@@ -2,6 +2,10 @@
 
 Integration module for synchronizing products, stock, categories, customers, and orders between Vendit and Magento 2.
 
+**Important note:** This module requires the [AmpersandHQ/magento2-disable-stock-reservation
+](https://github.com/idhlagency/magento2-disable-stock-reservation) package.  
+Stock reservations need to be disabled because inventory is managed in Vendit.
+
 ## Features
 
 - **Stock Import**: Sync inventory levels from Vendit
@@ -26,6 +30,11 @@ composer require reach-digital/magento2-vendit
 php bin/magento setup:upgrade
 # Flush the cache
 php bin/magento cache:flush
+```
+
+Make sure the 'Decrease Stock When Order is Placed' setting is enabled, by running:
+```bash
+./bin/magento config:set cataloginventory/options/can_subtract 1
 ```
 
 Assign all product attributes to the 'Default' attribute set, since that is the only attribute set Vendit will use:
