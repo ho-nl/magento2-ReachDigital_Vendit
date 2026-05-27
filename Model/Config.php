@@ -17,6 +17,7 @@ use Magento\Framework\Serialize\SerializerInterface;
 class Config
 {
     const XML_PATH_ENABLED = 'vendit/general/enabled';
+    const XML_PATH_ORDER_EXPORT_START_DATE = 'vendit/general/order_export_start_date';
     const XML_PATH_ENABLE_PRODUCT_IMPORT = 'vendit/product_import/enable_product_import';
     const XML_PATH_ENABLE_STOCK_IMPORT = 'vendit/stock_import/enable_stock_import';
     const XML_PATH_ENABLE_CATEGORY_IMPORT = 'vendit/category_import/enable_category_import';
@@ -62,7 +63,17 @@ class Config
 
     public function isEnabled(): bool
     {
-        return (bool) $this->scopeConfig->getValue(self::XML_PATH_ENABLED);
+        return (bool) $this->scopeConfig->getValue(self::XML_PATH_ENABLED)
+            && $this->getOrderExportStartDate() !== null;
+    }
+
+    public function getOrderExportStartDate(): ?\DateTime
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_ORDER_EXPORT_START_DATE);
+        if (empty($value)) {
+            return null;
+        }
+        return new \DateTime($value);
     }
 
     public function isProductImportEnabled(): bool

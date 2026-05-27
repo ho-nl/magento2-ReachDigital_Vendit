@@ -23,6 +23,13 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[Enable or disable the complete Vendit integration.]]></comment>
                 </field>
+                <field id="order_export_start_date" translate="label comment" type="text" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Order Export Start Date</label>
+                    <validate>required-entry</validate>
+                    <comment><![CDATA[Only orders placed on or after this date/time will be exported to Vendit.<br/>
+                        <strong>Format:</strong> <code>YYYY-MM-DD HH:MM:SS</code> — e.g. <code>2024-05-27 14:30:00</code><br/>
+                        <strong style="color: #eb5202;">Required:</strong> when not set, the entire module is considered disabled.]]></comment>
+                </field>
             </group>
             <!-- @todo Disabled in v1.0 — not yet ready for production -->
             <!--

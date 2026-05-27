@@ -31,7 +31,10 @@ class ExportOrdersXml
         // Get increment IDs of already exported orders
         $exportedOrderIds = $this->exportedOrderResource->getAllExportedOrderIds();
 
-        $searchCriteriaBuilder = $this->searchCriteriaBuilder->addFilter('status', 'processing');
+        $startDate = $this->venditConfig->getOrderExportStartDate();
+        $searchCriteriaBuilder = $this->searchCriteriaBuilder
+            ->addFilter('status', 'processing')
+            ->addFilter('created_at', $startDate->format('Y-m-d H:i:s'), 'gteq');
         if (!empty($exportedOrderIds)) {
             $searchCriteriaBuilder->addFilter('increment_id', $exportedOrderIds, 'nin');
         }
