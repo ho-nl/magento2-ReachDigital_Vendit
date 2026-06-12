@@ -20,11 +20,11 @@ class ProcessImportFiles
     public function __construct(
         private readonly Config $config,
         private readonly IoFile $ioFile,
-        private readonly ImportProductsXml $productImporter,
-        private readonly ImportStockXml $stockImporter,
-        private readonly ImportCategoriesXml $categoryImporter,
-        private readonly ImportCustomersXml $customerImporter,
-        private readonly ImportOrderStatusXml $orderImporter,
+        private readonly ImportProductsXmlFactory $productImporterFactory,
+        private readonly ImportStockXmlFactory $stockImporterFactory,
+        private readonly ImportCategoriesXmlFactory $categoryImporterFactory,
+        private readonly ImportCustomersXmlFactory $customerImporterFactory,
+        private readonly ImportOrderStatusXmlFactory $orderImporterFactory,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -57,7 +57,7 @@ class ProcessImportFiles
                 $this->processFile($file, $type);
                 $this->moveToProcessed($file, $type);
                 $processed++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->logger->error(
                     sprintf('Failed to process %s import file %s: %s', $type, $file, $e->getMessage()),
                     [
@@ -146,17 +146,19 @@ class ProcessImportFiles
     }
 
     /**
-     * Get importer instance for type
+     * Create a fresh importer instance for type.
+     * A new instance is required per file to avoid stale state in Ho\Import's ImportProfile
+     * (error aggregator, row counters, attribute caches) carrying over between imports.
      */
     private function getImporter(
         string $type,
     ): ImportProductsXml|ImportStockXml|ImportCategoriesXml|ImportCustomersXml|ImportOrderStatusXml {
         return match ($type) {
-            Config::TYPE_PRODUCT => $this->productImporter,
-            Config::TYPE_STOCK => $this->stockImporter,
-            Config::TYPE_CATEGORY => $this->categoryImporter,
-            Config::TYPE_CUSTOMER => $this->customerImporter,
-            Config::TYPE_ORDER => $this->orderImporter,
+            Config::TYPE_PRODUCT => $this->productImporterFactory->create(),
+            Config::TYPE_STOCK => $this->stockImporterFactory->create(),
+            Config::TYPE_CATEGORY => $this->categoryImporterFactory->create(),
+            Config::TYPE_CUSTOMER => $this->customerImporterFactory->create(),
+            Config::TYPE_ORDER => $this->orderImporterFactory->create(),
             default => throw new \InvalidArgumentException("Unknown import type: {$type}"),
         };
     }
