@@ -10,16 +10,16 @@
                 <enabled>0</enabled>
             </general>
             <product_import>
-                <enable_product_import>1</enable_product_import>
+                <enable_product_import>0</enable_product_import>
             </product_import>
             <stock_import>
                 <enable_stock_import>1</enable_stock_import>
             </stock_import>
             <category_import>
-                <enable_category_import>1</enable_category_import>
+                <enable_category_import>0</enable_category_import>
             </category_import>
             <customer_import>
-                <enable_customer_import>1</enable_customer_import>
+                <enable_customer_import>0</enable_customer_import>
             </customer_import>
             <order_update_import>
                 <enable_order_update_import>1</enable_order_update_import>

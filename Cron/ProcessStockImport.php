@@ -31,8 +31,8 @@ class ProcessStockImport
             return;
         }
 
-        // Check if there are pending product imports
-        if ($this->config->hasPendingImportFiles(Config::TYPE_PRODUCT)) {
+        // Check if there are pending product imports (only relevant when product import is enabled)
+        if ($this->config->isProductImportEnabled() && $this->config->hasPendingImportFiles(Config::TYPE_PRODUCT)) {
             $this->logger->info('Vendit cron: skipping stock import, product import files are still pending');
             return;
         }

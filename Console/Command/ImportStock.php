@@ -44,8 +44,8 @@ class ImportStock extends Command
             return Cli::RETURN_FAILURE;
         }
 
-        // Check if there are pending product imports
-        if ($this->config->hasPendingImportFiles(Config::TYPE_PRODUCT)) {
+        // Check if there are pending product imports (only relevant when product import is enabled)
+        if ($this->config->isProductImportEnabled() && $this->config->hasPendingImportFiles(Config::TYPE_PRODUCT)) {
             $output->writeln('<info>Skipping stock import: product import files are still pending</info>');
             return Cli::RETURN_SUCCESS;
         }
