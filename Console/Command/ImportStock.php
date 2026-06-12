@@ -15,6 +15,7 @@ use ReachDigital\Vendit\Model\ProcessImportFiles;
 use ReachDigital\Vendit\Model\Config;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ImportStock extends Command
@@ -30,9 +31,9 @@ class ImportStock extends Command
 
     protected function configure(): void
     {
-        $this->setName('vendit:stock:import')->setDescription(
-            'Import stock data from XML file supplied by Vendit'
-        );
+        $this->setName('vendit:stock:import')
+            ->setDescription('Import stock data from XML file supplied by Vendit')
+            ->addOption('limit', 'l', InputOption::VALUE_REQUIRED, 'Maximum number of files to process (default: all)');
 
         parent::configure();
     }
@@ -64,8 +65,10 @@ class ImportStock extends Command
                 $output->writeln(sprintf('<info>Moved %d file(s) to processing queue</info>', count($movedFiles)));
             }
 
-            // Then process files from the processing queue
-            $processed = $this->processImportFiles->process(Config::TYPE_STOCK);
+            $limitOption = $input->getOption('limit');
+            $limit = $limitOption !== null ? (int) $limitOption : null;
+
+            $processed = $this->processImportFiles->process(Config::TYPE_STOCK, $limit);
 
             if ($processed > 0) {
                 $output->writeln(sprintf('<info>Successfully processed %d stock import file(s)</info>', $processed));

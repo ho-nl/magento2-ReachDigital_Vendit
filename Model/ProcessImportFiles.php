@@ -30,12 +30,13 @@ class ProcessImportFiles
     }
 
     /**
-     * Process all files in processing subdirectory for given type
+     * Process files in processing subdirectory for given type
      *
      * @param string $type Import type (product, stock, category, customer, order)
+     * @param int|null $limit Maximum number of files to process, or null for all
      * @return int Number of files processed
      */
-    public function process(string $type): int
+    public function process(string $type, ?int $limit = null): int
     {
         $processingDir = $this->getProcessingDirectory($type);
 
@@ -48,6 +49,10 @@ class ProcessImportFiles
 
         if (empty($files)) {
             return 0;
+        }
+
+        if ($limit !== null) {
+            $files = array_slice($files, 0, $limit);
         }
 
         $processed = 0;
