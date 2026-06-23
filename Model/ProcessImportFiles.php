@@ -114,6 +114,12 @@ class ProcessImportFiles
             // Validate XML before processing
             $this->validateXmlFile($configuredPath);
 
+            // Skip empty export files (e.g. incremental stock exports with no changes)
+            if ($this->isXmlFileEmpty($configuredPath)) {
+                $this->logger->info(sprintf('Vendit %s import: skipping empty file %s', $type, basename($filePath)));
+                return;
+            }
+
             // Run the appropriate importer
             $importer = $this->getImporter($type);
             $result = $importer->run();
@@ -148,6 +154,33 @@ class ProcessImportFiles
             $errorMessages = array_map(fn($e) => trim($e->message), $errors);
             throw new \Exception('Invalid XML file: ' . implode(', ', $errorMessages));
         }
+    }
+
+    /**
+     * Returns true when the XML file contains no importable data rows.
+     *
+     * Checks whether any direct child of the root element (e.g. <Products>) contains
+     * at least one child item (e.g. <Product>) that itself has child elements.
+     * Metadata containers like <ExportInfo> are naturally excluded because their
+     * children are leaf elements (no grandchildren of their own).
+     */
+    private function isXmlFileEmpty(string $filePath): bool
+    {
+        $xml = simplexml_load_file($filePath);
+
+        if ($xml === false) {
+            return false;
+        }
+
+        foreach ($xml->children() as $container) {
+            foreach ($container->children() as $item) {
+                if ($item->count() > 0) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
