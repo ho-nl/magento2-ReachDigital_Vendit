@@ -28,6 +28,10 @@
                 <enable_order_export>1</enable_order_export>
                 <export_xml_retention_months>3</export_xml_retention_months>
             </order_export>
+            <import_cleanup>
+                <processed_retention_days>30</processed_retention_days>
+                <failed_retention_days>30</failed_retention_days>
+            </import_cleanup>
             <directory_mapping>
                 <import>
                     <file_path>import/files</file_path>

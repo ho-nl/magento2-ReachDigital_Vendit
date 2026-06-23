@@ -25,6 +25,8 @@ class Config
     const XML_PATH_ENABLE_ORDER_UPDATE_IMPORT = 'vendit/order_update_import/enable_order_update_import';
     const XML_PATH_ENABLE_ORDER_EXPORT = 'vendit/order_export/enable_order_export';
     const XML_PATH_EXPORT_XML_RETENTION_MONTHS = 'vendit/order_export/export_xml_retention_months';
+    const XML_PATH_IMPORT_PROCESSED_RETENTION_DAYS = 'vendit/import_cleanup/processed_retention_days';
+    const XML_PATH_IMPORT_FAILED_RETENTION_DAYS = 'vendit/import_cleanup/failed_retention_days';
 
     const DIR_MAPPING_CONFIG_PATH = 'vendit/directory_mapping';
 
@@ -104,6 +106,36 @@ class Config
     public function isOrderExportEnabled(): bool
     {
         return $this->isEnabled() && (bool) $this->scopeConfig->getValue(self::XML_PATH_ENABLE_ORDER_EXPORT);
+    }
+
+    /**
+     * Returns the number of days to retain files in the processed import subdirectory,
+     * or null when cleanup is disabled (0 or empty).
+     */
+    public function getImportProcessedRetentionDays(): ?int
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_IMPORT_PROCESSED_RETENTION_DAYS);
+
+        if ($value === null || $value === '' || (int) $value === 0) {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    /**
+     * Returns the number of days to retain files in the failed import subdirectory,
+     * or null when cleanup is disabled (0 or empty).
+     */
+    public function getImportFailedRetentionDays(): ?int
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_IMPORT_FAILED_RETENTION_DAYS);
+
+        if ($value === null || $value === '' || (int) $value === 0) {
+            return null;
+        }
+
+        return (int) $value;
     }
 
     /**
