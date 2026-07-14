@@ -40,6 +40,8 @@ class Config
     const XML_PATH_ORDER_STATUS_MAPPING = 'vendit_mapping/order_status_mapping/status_mapping';
 
     const XML_PATH_STOCK_SKU_SOURCE = 'vendit_mapping/stock_import/sku_source';
+    const XML_PATH_STOCK_DISABLE_ON_OUT_OF_STOCK = 'vendit/stock_import/disable_on_out_of_stock';
+    const XML_PATH_STOCK_ENABLE_ON_BACK_IN_STOCK = 'vendit/stock_import/enable_on_back_in_stock';
 
     const STOCK_SKU_SOURCE_PRODUCT_ID = 'product_id';
     const STOCK_SKU_SOURCE_BARCODE = 'barcode';
@@ -358,6 +360,16 @@ class Config
     public function getStockSkuSource(): string
     {
         return (string) ($this->scopeConfig->getValue(self::XML_PATH_STOCK_SKU_SOURCE) ?? self::STOCK_SKU_SOURCE_PRODUCT_ID);
+    }
+
+    public function isDisableOnOutOfStock(): bool
+    {
+        return (bool) $this->scopeConfig->getValue(self::XML_PATH_STOCK_DISABLE_ON_OUT_OF_STOCK);
+    }
+
+    public function isEnableOnBackInStock(): bool
+    {
+        return (bool) $this->scopeConfig->getValue(self::XML_PATH_STOCK_ENABLE_ON_BACK_IN_STOCK);
     }
 
     public function getTaxClassId(): ?int

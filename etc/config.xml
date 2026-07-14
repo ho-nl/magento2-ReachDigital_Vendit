@@ -14,6 +14,8 @@
             </product_import>
             <stock_import>
                 <enable_stock_import>1</enable_stock_import>
+                <disable_on_out_of_stock>0</disable_on_out_of_stock>
+                <enable_on_back_in_stock>0</enable_on_back_in_stock>
             </stock_import>
             <category_import>
                 <enable_category_import>0</enable_category_import>

@@ -106,6 +106,21 @@ class ImportStockXml extends ImportProfile
             $this->log->info("Stock import: skipped {$skipped} item(s) with no matching Magento product.");
         }
 
+        $disableOnOutOfStock = $this->config->isDisableOnOutOfStock();
+        $enableOnBackInStock = $this->config->isEnableOnBackInStock();
+
+        if ($disableOnOutOfStock || $enableOnBackInStock) {
+            foreach ($stockItems as &$item) {
+                $isInStock = ($item['is_in_stock'] ?? '0') === '1';
+                if (!$isInStock && $disableOnOutOfStock) {
+                    $item['status'] = '2'; // disabled
+                } elseif ($isInStock && $enableOnBackInStock) {
+                    $item['status'] = '1'; // enabled
+                }
+            }
+            unset($item);
+        }
+
         // Save processed items for debugging
         $this->saveProcessedItems($stockItems);
 

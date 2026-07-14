@@ -47,6 +47,16 @@
                     <label>Enable Stock Import</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="disable_on_out_of_stock" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Disable Product When Out of Stock</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[When enabled, products are automatically set to <strong>Disabled</strong> in the catalog when their stock quantity reaches 0 during a stock import.]]></comment>
+                </field>
+                <field id="enable_on_back_in_stock" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Re-enable Product When Back in Stock</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[When enabled, products are automatically set to <strong>Enabled</strong> in the catalog when their stock quantity goes above 0 during a stock import.]]></comment>
+                </field>
             </group>
             <!-- @todo Disabled in v1.0 — not yet ready for production -->
             <!--
