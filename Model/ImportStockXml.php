@@ -15,6 +15,7 @@ use Magento\Catalog\Model\Product;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\App\ObjectManagerFactory;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Console\Cli;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem;
 use Magento\ImportExport\Model\Import;
@@ -24,6 +25,26 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class ImportStockXml extends ImportProfile
 {
+    /**
+     * Pre-check getItems() before delegating to the parent. When no XML items
+     * match existing Magento products the result is empty, which would crash
+     * the importer with "Empty column names". We detect this early and return
+     * success — there is simply nothing to import.
+     *
+     * The getItems() call is intentionally made twice (once here, once inside
+     * parent::run()) because the parent's getItemsMeasured() and
+     * getObjectManager() are private and cannot be reused.
+     */
+    public function run()
+    {
+        if (empty($this->getItems())) {
+            $this->log->info('Stock import: no matching items found, nothing to import.');
+            return Cli::RETURN_SUCCESS;
+        }
+
+        return parent::run();
+    }
+
     public function __construct(
         ObjectManagerFactory $objectManagerFactory,
         Stopwatch $stopwatch,
