@@ -77,14 +77,45 @@ class ImportStockXml extends ImportProfile
 
         // Map stock data to Magento product import format
         $useBarcode = $this->config->getStockSkuSource() === Config::STOCK_SKU_SOURCE_BARCODE;
+
+        // When using barcode mode, collect all barcodes and resolve which ones exist as SKUs
+        // so we can pick the first matching barcode for each product.
+        $allBarcodes = [];
+        if ($useBarcode) {
+            foreach ($stockItems as $item) {
+                $barcodes = $item['Barcodes']['Barcode'] ?? null;
+                if ($barcodes === null) {
+                    continue;
+                }
+                if (!is_array($barcodes)) {
+                    $barcodes = [$barcodes];
+                }
+                foreach ($barcodes as $barcode) {
+                    $allBarcodes[] = (string) $barcode;
+                }
+            }
+            $allBarcodes = array_unique($allBarcodes);
+        }
+        $existingBarcodeSkus = !empty($allBarcodes) ? $this->getExistingSkus($allBarcodes) : [];
+
         $mapping = [
-            'sku' => function ($item) use ($useBarcode) {
+            'sku' => function ($item) use ($useBarcode, $existingBarcodeSkus) {
                 if ($useBarcode) {
-                    $barcode = $item['Barcodes']['Barcode'] ?? null;
-                    if (is_array($barcode)) {
-                        $barcode = $barcode[0] ?? null;
+                    $barcodes = $item['Barcodes']['Barcode'] ?? null;
+                    if ($barcodes !== null) {
+                        if (!is_array($barcodes)) {
+                            $barcodes = [$barcodes];
+                        }
+                        // Try each barcode until we find one that exists as a SKU
+                        foreach ($barcodes as $barcode) {
+                            if (isset($existingBarcodeSkus[(string) $barcode])) {
+                                return (string) $barcode;
+                            }
+                        }
+                        // No matching barcode found, fall back to first barcode
+                        return (string) ($barcodes[0] ?? $item['ProductId']);
                     }
-                    return (string) ($barcode ?? $item['ProductId']);
+                    return (string) $item['ProductId'];
                 }
                 return (string) $item['ProductId'];
             },
