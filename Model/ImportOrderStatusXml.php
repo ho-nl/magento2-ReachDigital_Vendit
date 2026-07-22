@@ -240,13 +240,6 @@ class ImportOrderStatusXml
                     'status' => $magentoStatus,
                 ]);
 
-                $this->processedOrders[] = [
-                    'order_number' => $orderNumber,
-                    'old_status' => $currentStatus,
-                    'new_status' => $magentoStatus,
-                    'vendit_status' => $statusDescription,
-                    'action' => 'Created shipment',
-                ];
             } catch (\Exception $e) {
                 $errorMessage = 'Failed to create shipment from Vendit status update: ' . $e->getMessage();
                 $order->addCommentToStatusHistory($errorMessage);
@@ -262,6 +255,7 @@ class ImportOrderStatusXml
             'vendit_status' => $statusDescription,
         ]);
 
+        $order->setState($magentoState);
         $order->setStatus($magentoStatus);
         $order->addCommentToStatusHistory(
             sprintf('Order status updated from Vendit: %s (Status Enum: %s)', $statusDescription, $statusEnumValue),
