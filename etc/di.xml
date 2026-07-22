@@ -10,9 +10,12 @@
                 <!-- Export Commands -->
                 <item name="order_export" xsi:type="object">ReachDigital\Vendit\Console\Command\ExportOrders</item>
                 <!-- Import Commands -->
-                <item name="category_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportCategories</item>
-                <item name="customer_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportCustomers</item>
-                <item name="product_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportProducts</item>
+                <!-- @todo Disabled in v1.0 — not yet ready for production -->
+                <!--item name="category_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportCategories</item-->
+                <!-- @todo Disabled in v1.0 — not yet ready for production -->
+                <!--item name="customer_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportCustomers</item-->
+                <!-- @todo Disabled in v1.0 — not yet ready for production -->
+                <!--item name="product_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportProducts</item-->
                 <item name="stock_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportStock</item>
                 <item name="orderstatus_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportOrderStatus</item>
                 <!-- Utility Commands -->
