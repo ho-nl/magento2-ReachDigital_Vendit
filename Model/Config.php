@@ -23,6 +23,7 @@ class Config
     const XML_PATH_ENABLE_CATEGORY_IMPORT = 'vendit/category_import/enable_category_import';
     const XML_PATH_ENABLE_CUSTOMER_IMPORT = 'vendit/customer_import/enable_customer_import';
     const XML_PATH_ENABLE_ORDER_UPDATE_IMPORT = 'vendit/order_update_import/enable_order_update_import';
+    const XML_PATH_ENABLE_PRICE_IMPORT = 'vendit/price_import/enable_price_import';
     const XML_PATH_ENABLE_ORDER_EXPORT = 'vendit/order_export/enable_order_export';
     const XML_PATH_EXPORT_XML_RETENTION_MONTHS = 'vendit/order_export/export_xml_retention_months';
     const XML_PATH_IMPORT_PROCESSED_RETENTION_DAYS = 'vendit/import_cleanup/processed_retention_days';
@@ -52,6 +53,7 @@ class Config
     const TYPE_CUSTOMER = 'customer';
     const TYPE_ORDER = 'order';
     const TYPE_PRODUCT = 'product';
+    const TYPE_PRICE = 'price';
     const TYPE_STOCK = 'stock';
 
     const EXPORT = 'export';
@@ -103,6 +105,11 @@ class Config
     public function isOrderUpdateImportEnabled(): bool
     {
         return $this->isEnabled() && (bool) $this->scopeConfig->getValue(self::XML_PATH_ENABLE_ORDER_UPDATE_IMPORT);
+    }
+
+    public function isPriceImportEnabled(): bool
+    {
+        return $this->isEnabled() && (bool) $this->scopeConfig->getValue(self::XML_PATH_ENABLE_PRICE_IMPORT);
     }
 
     public function isOrderExportEnabled(): bool
@@ -176,6 +183,11 @@ class Config
     public function getStockImportFilePath(): string
     {
         return $this->getImportFilePathForType(self::TYPE_STOCK);
+    }
+
+    public function getPriceImportFilePath(): string
+    {
+        return $this->getImportFilePathForType(self::TYPE_PRICE);
     }
 
     public function getCategoryImportFilePath(): string

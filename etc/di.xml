@@ -17,6 +17,7 @@
                 <!-- @todo Disabled in v1.0 — not yet ready for production -->
                 <!--item name="product_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportProducts</item-->
                 <item name="stock_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportStock</item>
+                <item name="price_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportPrices</item>
                 <item name="orderstatus_import" xsi:type="object">ReachDigital\Vendit\Console\Command\ImportOrderStatus</item>
                 <!-- Utility Commands -->
                 <item name="trim_attribute_options" xsi:type="object">ReachDigital\Vendit\Console\Command\TrimAttributeOptions</item>

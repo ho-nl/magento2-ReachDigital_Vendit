@@ -41,6 +41,14 @@
                 </field>
             </group>
             -->
+            <group id="price_import" translate="label" type="text" sortOrder="105" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Price Import</label>
+                <field id="enable_price_import" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Enable Price Import</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Import product prices (and action/special prices) from Vendit Products XML files.]]></comment>
+                </field>
+            </group>
             <group id="stock_import" translate="label" type="text" sortOrder="110" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Stock Import</label>
                 <field id="enable_stock_import" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">

@@ -25,6 +25,7 @@ class ProcessImportFiles
         private readonly ImportCategoriesXmlFactory $categoryImporterFactory,
         private readonly ImportCustomersXmlFactory $customerImporterFactory,
         private readonly ImportOrderStatusXmlFactory $orderImporterFactory,
+        private readonly ImportPricesXmlFactory $priceImporterFactory,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -190,13 +191,14 @@ class ProcessImportFiles
      */
     private function getImporter(
         string $type,
-    ): ImportProductsXml|ImportStockXml|ImportCategoriesXml|ImportCustomersXml|ImportOrderStatusXml {
+    ): ImportProductsXml|ImportStockXml|ImportCategoriesXml|ImportCustomersXml|ImportOrderStatusXml|ImportPricesXml {
         return match ($type) {
             Config::TYPE_PRODUCT => $this->productImporterFactory->create(),
             Config::TYPE_STOCK => $this->stockImporterFactory->create(),
             Config::TYPE_CATEGORY => $this->categoryImporterFactory->create(),
             Config::TYPE_CUSTOMER => $this->customerImporterFactory->create(),
             Config::TYPE_ORDER => $this->orderImporterFactory->create(),
+            Config::TYPE_PRICE => $this->priceImporterFactory->create(),
             default => throw new \InvalidArgumentException("Unknown import type: {$type}"),
         };
     }

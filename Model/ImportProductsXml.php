@@ -66,6 +66,10 @@ class ImportProductsXml extends ImportProfile
 
     public function run()
     {
+        exit(
+            'Exiting: make sure the ImportPricesXml cannot be enabled simultaneously as this import, because they use the same source file (Products.xml).'
+        );
+
         $result = parent::run();
 
         // Clean up source images only after successful import
@@ -609,11 +613,12 @@ class ImportProductsXml extends ImportProfile
                 // Configurable product: multiple variations
                 // Check if this product was previously imported as a simple product
                 // If so, we need to convert it to configurable
-                $firstVariantSku = (string) ($productArray['ProductVariations']['ProductVariation'][0]['ProductId'] ?? '');
+                $firstVariantSku =
+                    (string) ($productArray['ProductVariations']['ProductVariation'][0]['ProductId'] ?? '');
 
                 if (!empty($firstVariantSku) && $this->productExistsAsSimple($firstVariantSku)) {
                     $this->log->info(
-                        "Product {$firstVariantSku} exists as simple but now has multiple variants - converting to configurable"
+                        "Product {$firstVariantSku} exists as simple but now has multiple variants - converting to configurable",
                     );
                     // Create configurable with conversion flag
                     foreach ($this->createConfigurableProduct($productArray, true) as $sku => $product) {

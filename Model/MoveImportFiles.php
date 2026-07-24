@@ -35,6 +35,7 @@ class MoveImportFiles
             Config::TYPE_CATEGORY => 'isCategoryImportEnabled',
             Config::TYPE_CUSTOMER => 'isCustomerImportEnabled',
             Config::TYPE_ORDER => 'isOrderUpdateImportEnabled',
+            Config::TYPE_PRICE => 'isPriceImportEnabled',
         ];
 
         foreach ($importTypes as $type => $enabledMethod) {

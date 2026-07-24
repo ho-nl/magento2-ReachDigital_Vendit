@@ -12,6 +12,9 @@
         </job>
         -->
 
+        <job name="vendit_process_price_import" instance="ReachDigital\Vendit\Cron\ProcessPriceImport" method="execute">
+            <schedule>0 * * * *</schedule>
+        </job>
         <job name="vendit_process_stock_import" instance="ReachDigital\Vendit\Cron\ProcessStockImport" method="execute">
             <schedule>0 * * * *</schedule>
         </job>

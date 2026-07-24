@@ -9,6 +9,7 @@ Stock reservations need to be disabled because inventory is managed in Vendit.
 ## Features
 
 - **Stock Import**: Sync inventory levels from Vendit
+- **Price Import**: Import product prices and action/special prices from Vendit
 - **Order Export**: Export orders to Vendit
 - **Order Update Import**: Import order status updates from Vendit
 
@@ -110,6 +111,9 @@ php bin/magento vendit:products:import
 
 # Import stock levels
 php bin/magento vendit:stock:import
+
+# Import product prices
+php bin/magento vendit:price:import
 
 # Import categories
 php bin/magento vendit:categories:import

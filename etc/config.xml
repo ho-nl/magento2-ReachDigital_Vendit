@@ -12,6 +12,9 @@
             <product_import>
                 <enable_product_import>0</enable_product_import>
             </product_import>
+            <price_import>
+                <enable_price_import>1</enable_price_import>
+            </price_import>
             <stock_import>
                 <enable_stock_import>1</enable_stock_import>
                 <disable_on_out_of_stock>0</disable_on_out_of_stock>
@@ -38,6 +41,7 @@
                 <import>
                     <file_path>import/files</file_path>
                     <product_file_prefix>Products</product_file_prefix>
+                    <price_file_prefix>Products</price_file_prefix>
                     <stock_file_prefix>Stock</stock_file_prefix>
                     <category_file_prefix>Groups</category_file_prefix>
                     <customer_file_prefix>Customers</customer_file_prefix>
